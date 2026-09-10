@@ -8,7 +8,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { build, parseFrontmatter, setFrontmatterField, slugify, CONTENT_DIR, CONFIG_PATH } = require("./build.js");
+const { build, parseFrontmatter, setFrontmatterField, markdownToHtml, slugify, CONTENT_DIR, IMAGES_DIR, CONFIG_PATH } = require("./build.js");
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
@@ -44,12 +44,12 @@ function sendJson(res, status, data) {
   res.end(body);
 }
 
-function readJsonBody(req) {
+function readJsonBody(req, maxBytes = 1e6) {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
-      if (data.length > 1e6) req.destroy();
+      if (data.length > maxBytes) req.destroy();
     });
     req.on("end", () => {
       if (!data) return resolve({});
@@ -58,6 +58,14 @@ function readJsonBody(req) {
     req.on("error", reject);
   });
 }
+
+const IMAGE_EXT_BY_MIME = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+};
 
 // Summarize the current site state for the admin UI: categories plus a
 // lightweight view of each post (no rendered HTML body needed here).
@@ -74,7 +82,34 @@ function siteSnapshot() {
   };
 }
 
-async function handleApi(req, res, url) {
+// Resolve a "file" param from the client to a real path inside content/posts,
+// rejecting anything that isn't a plain .md filename in that directory.
+function resolvePostFile(name) {
+  const file = path.basename(String(name || ""));
+  if (!file.endsWith(".md")) return null;
+  const filePath = path.join(CONTENT_DIR, file);
+  return fs.existsSync(filePath) ? { file, filePath } : null;
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Serialize a post's frontmatter + body from plain fields. `slug` is always
+// written explicitly so a later title edit never changes the post's URL.
+function serializePost({ title, date, slug, category, excerpt, body }) {
+  const oneLine = (s) => String(s || "").replace(/\r?\n/g, " ").trim();
+  const lines = [
+    `title: ${oneLine(title)}`,
+    `date: ${date}`,
+    `slug: ${slug}`,
+  ];
+  if (category) lines.push(`category: ${category}`);
+  if (excerpt) lines.push(`excerpt: ${oneLine(excerpt)}`);
+  return `---\n${lines.join("\n")}\n---\n\n${String(body || "").replace(/\r\n/g, "\n").trim()}\n`;
+}
+
+async function handleApi(req, res, url, query) {
   if (req.method === "GET" && url === "/api/data") {
     return sendJson(res, 200, siteSnapshot());
   }
@@ -105,15 +140,112 @@ async function handleApi(req, res, url) {
   if (req.method === "POST" && url === "/api/posts/category") {
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
-    const file = path.basename(String(body.file || ""));
-    if (!file.endsWith(".md")) return sendJson(res, 400, { error: "Invalid file" });
-    const filePath = path.join(CONTENT_DIR, file);
-    if (!fs.existsSync(filePath)) return sendJson(res, 404, { error: "Post not found" });
+    const resolved = resolvePostFile(body.file);
+    if (!resolved) return sendJson(res, 404, { error: "Post not found" });
 
     const category = body.category ? slugify(body.category) : null;
-    const raw = fs.readFileSync(filePath, "utf8");
+    const raw = fs.readFileSync(resolved.filePath, "utf8");
     const updated = setFrontmatterField(raw, "category", category);
-    fs.writeFileSync(filePath, updated);
+    fs.writeFileSync(resolved.filePath, updated);
+    return sendJson(res, 200, siteSnapshot());
+  }
+
+  // Full post content for the admin edit form (title/date/category/excerpt
+  // plus the raw Markdown body, not the rendered HTML).
+  if (req.method === "GET" && url === "/api/posts/content") {
+    const resolved = resolvePostFile(query.get("file"));
+    if (!resolved) return sendJson(res, 404, { error: "Post not found" });
+    const { data, content } = parseFrontmatter(fs.readFileSync(resolved.filePath, "utf8"));
+    return sendJson(res, 200, {
+      file: resolved.file,
+      title: data.title || "",
+      date: data.date || todayIso(),
+      slug: data.slug || slugify(data.title || resolved.file.replace(/\.md$/, "")),
+      category: data.category || null,
+      excerpt: data.excerpt || "",
+      body: content.trim(),
+    });
+  }
+
+  if (req.method === "POST" && url === "/api/render") {
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
+    return sendJson(res, 200, { html: markdownToHtml(String(body.body || ""), currentBasePath()) });
+  }
+
+  // Save an uploaded or scribbled image (sent as a data: URL) to
+  // content/images/, and also drop a copy straight into public/images/ so
+  // it's visible immediately without waiting for a full rebuild.
+  if (req.method === "POST" && url === "/api/images") {
+    let body;
+    try { body = await readJsonBody(req, 20 * 1024 * 1024); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
+    const match = /^data:([\w/+.-]+);base64,(.+)$/.exec(String(body.dataUrl || ""));
+    if (!match) return sendJson(res, 400, { error: "Expected a base64 data: URL" });
+    const [, mime, base64] = match;
+    const ext = IMAGE_EXT_BY_MIME[mime];
+    if (!ext) return sendJson(res, 400, { error: `Unsupported image type: ${mime}` });
+
+    const baseName = slugify(path.basename(String(body.filename || "image"), path.extname(String(body.filename || "")))) || "image";
+    let name = `${baseName}-${Date.now().toString(36)}.${ext}`;
+
+    fs.mkdirSync(IMAGES_DIR, { recursive: true });
+    const buffer = Buffer.from(base64, "base64");
+    fs.writeFileSync(path.join(IMAGES_DIR, name), buffer);
+
+    fs.mkdirSync(path.join(PUBLIC_DIR, "images"), { recursive: true });
+    fs.writeFileSync(path.join(PUBLIC_DIR, "images", name), buffer);
+
+    return sendJson(res, 200, { url: `/images/${name}` });
+  }
+
+  if (req.method === "POST" && url === "/api/posts") {
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
+    const title = String(body.title || "").trim();
+    if (!title) return sendJson(res, 400, { error: "Title is required" });
+
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") ? body.date : todayIso();
+    const slug = slugify(title);
+    const category = body.category ? slugify(body.category) : null;
+
+    let filename = `${date}-${slug}.md`;
+    let n = 2;
+    while (fs.existsSync(path.join(CONTENT_DIR, filename))) {
+      filename = `${date}-${slug}-${n}.md`;
+      n++;
+    }
+
+    const raw = serializePost({ title, date, slug, category, excerpt: body.excerpt, body: body.body });
+    fs.writeFileSync(path.join(CONTENT_DIR, filename), raw);
+    return sendJson(res, 200, { ...siteSnapshot(), file: filename });
+  }
+
+  if (req.method === "POST" && url === "/api/posts/update") {
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
+    const resolved = resolvePostFile(body.file);
+    if (!resolved) return sendJson(res, 404, { error: "Post not found" });
+    const title = String(body.title || "").trim();
+    if (!title) return sendJson(res, 400, { error: "Title is required" });
+
+    // Freeze the URL: keep whatever slug the post already has (explicit or
+    // derived from its original title), regardless of the new title.
+    const { data: existing } = parseFrontmatter(fs.readFileSync(resolved.filePath, "utf8"));
+    const slug = existing.slug ? slugify(existing.slug) : slugify(existing.title || title);
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") ? body.date : (existing.date || todayIso());
+    const category = body.category ? slugify(body.category) : null;
+
+    const raw = serializePost({ title, date, slug, category, excerpt: body.excerpt, body: body.body });
+    fs.writeFileSync(resolved.filePath, raw);
+    return sendJson(res, 200, siteSnapshot());
+  }
+
+  if (req.method === "POST" && url === "/api/posts/delete") {
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: "Invalid JSON" }); }
+    const resolved = resolvePostFile(body.file);
+    if (!resolved) return sendJson(res, 404, { error: "Post not found" });
+    fs.unlinkSync(resolved.filePath);
     return sendJson(res, 200, siteSnapshot());
   }
 
@@ -130,10 +262,11 @@ function serveStaticFile(filePath, res) {
 }
 
 http.createServer((req, res) => {
-  const reqPath = decodeURIComponent(req.url.split("?")[0]);
+  const parsedUrl = new URL(req.url, "http://localhost");
+  const reqPath = decodeURIComponent(parsedUrl.pathname);
 
   if (reqPath.startsWith("/api/")) {
-    handleApi(req, res, reqPath).catch((err) => sendJson(res, 500, { error: err.message }));
+    handleApi(req, res, reqPath, parsedUrl.searchParams).catch((err) => sendJson(res, 500, { error: err.message }));
     return;
   }
 

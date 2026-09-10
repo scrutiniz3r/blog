@@ -4,7 +4,16 @@ A minimal, Substack-esque blog. Zero dependencies, one build script, RSS include
 
 ## Writing a post
 
-Add a Markdown file to `content/posts/`, e.g. `content/posts/2026-09-10-my-post.md`:
+The easy way: run `npm run serve` and open `/admin` — it has a "Write" form
+(title, date, category, excerpt, a Markdown body with a live preview tab,
+plus buttons to drop in an uploaded image or a quick scribble drawn right in
+the browser). Every save writes the post file and rebuilds. Click a post's
+title in the table below the form to edit it, or use its "Delete" link. The
+post's URL is frozen to its original slug, so renaming a title later doesn't
+break links to it.
+
+The manual way: add a Markdown file to `content/posts/`, e.g.
+`content/posts/2026-09-10-my-post.md`:
 
 ```markdown
 ---
@@ -14,7 +23,8 @@ excerpt: One sentence for the archive list and RSS description.
 ---
 
 Body text goes here, in Markdown (headings, **bold**, *italic*, links, lists,
-blockquotes, and code blocks are supported).
+blockquotes, images with `![alt](/images/photo.png)`, and code blocks are
+all supported). Drop image files straight into `content/images/`.
 ```
 
 ## Build and preview

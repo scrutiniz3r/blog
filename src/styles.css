@@ -334,6 +334,13 @@ img, svg { max-width: 100%; display: block; }
   font-size: 0.9em;
 }
 .post-body a { text-decoration-color: var(--muted); }
+.post-body img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.8rem 0;
+  border-radius: 3px;
+}
 
 @media (max-width: 720px) {
   .post-header .kicker, .post-header h1 { grid-column: 1 / -1; }

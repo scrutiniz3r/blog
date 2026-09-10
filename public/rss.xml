@@ -6,7 +6,7 @@
 <atom:link href="https://scrutiniz3r.github.io/blog/rss.xml" rel="self" type="application/rss+xml"/>
 <description>Short, occasional essays on ideas worth sitting with.</description>
 <language>en-us</language>
-<lastBuildDate>Thu, 10 Sep 2026 19:12:37 GMT</lastBuildDate>
+<lastBuildDate>Thu, 10 Sep 2026 19:33:00 GMT</lastBuildDate>
 
 <item>
 <title>The First Rule of Wealth Nobody Leads With</title>
@@ -78,7 +78,7 @@
 <pubDate>Mon, 05 Jan 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[Why this exists, what to expect, and why there's no algorithm deciding what you see.]]></description>
 <content:encoded><![CDATA[<p>This is a newsletter in the oldest sense of the word: things worth noting, sent directly, on no schedule but the one dictated by having something to say.</p>
-<p>There's no algorithm here. No engagement loop, no infinite scroll, no notification badge. If you want to keep reading, you subscribe to the <a href="/rss.xml">RSS feed</a> or you don't. That's the whole mechanism.</p>
+<p>There's no algorithm here. No engagement loop, no infinite scroll, no notification badge. If you want to keep reading, you subscribe to the <a href="/blog/rss.xml">RSS feed</a> or you don't. That's the whole mechanism.</p>
 <p>A few things you can expect:</p>
 <ul>
 <li>Short essays, rarely more than a few hundred words</li>

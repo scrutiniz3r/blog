@@ -25,11 +25,19 @@
   section { margin-bottom: 3rem; }
   h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.3rem; }
   .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.2rem; }
-  .cat-row { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; align-items: center; }
-  .cat-row input {
-    padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 4px;
-    font: inherit; background: #fff;
+
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 1rem; }
+  input[type="text"], input[type="date"], textarea, select {
+    display: block; width: 100%; margin-top: 0.35rem;
+    padding: 0.55rem 0.65rem; border: 1px solid var(--line); border-radius: 4px;
+    font: inherit; background: #fff; color: var(--ink);
   }
+  textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9rem; resize: vertical; }
+  .field-row { display: flex; gap: 1.2rem; }
+  .field-row label { flex: 1; }
+
+  .cat-row { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; align-items: center; }
+  .cat-row input { margin-top: 0; }
   .cat-row .cat-label { flex: 2; }
   .cat-row .cat-slug { flex: 1; color: var(--muted); font-size: 0.9em; }
   .cat-row button {
@@ -37,25 +45,56 @@
     font-size: 1.2rem; line-height: 1; padding: 0.2rem 0.5rem;
   }
   .cat-row button:hover { color: #c0392b; }
-  .row-actions { display: flex; gap: 0.7rem; align-items: center; margin-top: 0.8rem; }
-  button.primary, button.secondary {
+
+  .row-actions { display: flex; gap: 0.7rem; align-items: center; margin-top: 0.8rem; flex-wrap: wrap; }
+  button.primary, button.secondary, button.danger {
     font: inherit; border-radius: 4px; padding: 0.55rem 1rem; cursor: pointer;
   }
   button.primary { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
   button.primary:hover { opacity: 0.85; }
   button.secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); }
   button.secondary:hover { border-color: var(--ink); }
+  button.danger { background: transparent; border: 1px solid #e2b4ac; color: #c0392b; }
+  button.danger:hover { background: #fdf1ef; }
+
   .status { font-size: 0.85rem; color: var(--muted); }
   .status.ok { color: #2f7a3d; }
   .status.err { color: #c0392b; }
+
+  .editor-tabs { display: flex; gap: 0.4rem; margin: 0 0 0.35rem; }
+  .tab-btn {
+    font: inherit; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    background: transparent; border: 1px solid var(--line); border-radius: 4px 4px 0 0; border-bottom: none;
+    padding: 0.35rem 0.7rem; cursor: pointer; color: var(--muted);
+  }
+  .tab-btn.active { color: var(--ink); background: #fff; }
+
+  .preview-pane {
+    border: 1px solid var(--line); border-radius: 4px; padding: 1rem 1.2rem;
+    min-height: 200px; background: #fff; font-family: Georgia, serif; line-height: 1.6;
+  }
+  .preview-pane h2, .preview-pane h3, .preview-pane h4 { font-family: inherit; }
+  .preview-pane blockquote { border-left: 3px solid var(--ink); margin: 0.8rem 0; padding-left: 1rem; color: var(--muted); font-style: italic; }
+  .preview-pane :first-child { margin-top: 0; }
+  .preview-pane img { max-width: 100%; height: auto; border-radius: 3px; }
+
+  .scribble-panel { margin-top: 0.6rem; border: 1px solid var(--line); border-radius: 4px; padding: 0.8rem; background: #fff; }
+  #scribble-canvas { display: block; width: 100%; max-width: 640px; height: auto; border: 1px dashed var(--line); border-radius: 3px; touch-action: none; cursor: crosshair; background: #fff; }
+
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
   th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-  td.title { font-weight: 600; }
   td.date { color: var(--muted); font-size: 0.9em; white-space: nowrap; }
-  select {
-    font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: #fff;
+  .link-btn {
+    background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--ink);
+    cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line);
   }
+  .link-btn:hover { text-decoration-color: var(--ink); }
+  .delete-link {
+    background: none; border: none; padding: 0; font: inherit; font-size: 0.8rem; color: var(--muted);
+    cursor: pointer; text-decoration: underline; text-decoration-color: var(--line);
+  }
+  .delete-link:hover { color: #c0392b; text-decoration-color: #c0392b; }
   .row-flash { font-size: 0.8rem; color: var(--muted); margin-left: 0.5rem; }
 </style>
 </head>
@@ -65,6 +104,68 @@
 <a href="/">View site &rarr;</a>
 </header>
 <main>
+
+<section id="write-section">
+<h2 id="write-heading">Write</h2>
+<p class="hint" id="write-hint">New post. Markdown is supported in the body — bold, italic, links, lists, blockquotes, headings, code.</p>
+
+<label>Title
+<input type="text" id="f-title" placeholder="Post title">
+</label>
+
+<div class="field-row">
+<label>Date
+<input type="date" id="f-date">
+</label>
+<label>Category
+<select id="f-category"></select>
+</label>
+</div>
+
+<label>Excerpt
+<input type="text" id="f-excerpt" placeholder="One sentence for the archive list and RSS description">
+</label>
+
+<label>Body
+<div class="editor-tabs">
+<button type="button" class="tab-btn active" id="tab-write">Write</button>
+<button type="button" class="tab-btn" id="tab-preview">Preview</button>
+<span style="flex:1"></span>
+<button type="button" class="tab-btn" id="insert-image-btn">+ Image</button>
+<button type="button" class="tab-btn" id="insert-scribble-btn">+ Scribble</button>
+<input type="file" id="image-file-input" accept="image/*" hidden>
+</div>
+<textarea id="f-body" rows="14" placeholder="Write the post in Markdown…"></textarea>
+<div id="f-preview" class="preview-pane" hidden></div>
+
+<div id="scribble-panel" class="scribble-panel" hidden>
+<canvas id="scribble-canvas" width="640" height="320"></canvas>
+<div class="row-actions">
+<button class="secondary" type="button" id="scribble-clear">Clear</button>
+<button class="primary" type="button" id="scribble-insert">Insert scribble</button>
+<button class="secondary" type="button" id="scribble-close">Close</button>
+<span class="status" id="scribble-status"></span>
+</div>
+</div>
+</label>
+
+<div class="row-actions">
+<button class="primary" id="save-post" type="button">Publish post</button>
+<button class="secondary" id="cancel-edit" type="button" hidden>Cancel edit</button>
+<button class="danger" id="delete-post" type="button" hidden>Delete post</button>
+<span class="status" id="post-status"></span>
+</div>
+</section>
+
+<section id="posts-section">
+<h2>Posts</h2>
+<p class="hint">Click a title to edit it. Category changes save immediately.</p>
+<table>
+<thead><tr><th>Title</th><th>Date</th><th>Category</th><th></th></tr></thead>
+<tbody id="post-rows"></tbody>
+</table>
+</section>
+
 <section id="categories-section">
 <h2>Categories</h2>
 <p class="hint">These drive the filter tabs on the homepage and the tag on every post. Rename, add, or delete them here.</p>
@@ -76,18 +177,11 @@
 </div>
 </section>
 
-<section id="posts-section">
-<h2>Posts</h2>
-<p class="hint">Assign a category to each post. Saves immediately when you change it.</p>
-<table>
-<thead><tr><th>Title</th><th>Date</th><th>Category</th></tr></thead>
-<tbody id="post-rows"></tbody>
-</table>
-</section>
 </main>
 
 <script>
 let state = { categories: [], posts: [] };
+let editingFile = null;
 
 function el(tag, attrs, children) {
   const node = document.createElement(tag);
@@ -103,12 +197,287 @@ function titleCase(slug) {
   return slug.split("-").map((w) => w ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
 }
 
+function todayIso() {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d - tz).toISOString().slice(0, 10);
+}
+
 async function loadData() {
   const res = await fetch("/api/data");
   state = await res.json();
   renderCategories();
   renderPosts();
+  renderCategoryOptions();
 }
+
+// ---------- Write / edit form ----------
+
+function renderCategoryOptions() {
+  const select = document.getElementById("f-category");
+  const current = select.value;
+  select.innerHTML = "";
+  select.appendChild(el("option", { value: "" }, [document.createTextNode("— none —")]));
+  state.categories.forEach((c) => select.appendChild(el("option", { value: c.slug }, [document.createTextNode(c.label)])));
+  if ([...select.options].some((o) => o.value === current)) select.value = current;
+}
+
+function resetForm() {
+  editingFile = null;
+  document.getElementById("write-heading").textContent = "Write";
+  document.getElementById("write-hint").textContent = "New post. Markdown is supported in the body — bold, italic, links, lists, blockquotes, headings, code.";
+  document.getElementById("f-title").value = "";
+  document.getElementById("f-date").value = todayIso();
+  document.getElementById("f-excerpt").value = "";
+  document.getElementById("f-body").value = "";
+  renderCategoryOptions();
+  document.getElementById("f-category").value = "";
+  document.getElementById("save-post").textContent = "Publish post";
+  document.getElementById("cancel-edit").hidden = true;
+  document.getElementById("delete-post").hidden = true;
+  document.getElementById("post-status").textContent = "";
+  showTab("write");
+}
+
+async function loadPostForEdit(file) {
+  const res = await fetch("/api/posts/content?file=" + encodeURIComponent(file));
+  if (!res.ok) return;
+  const p = await res.json();
+  editingFile = p.file;
+  document.getElementById("write-heading").textContent = "Editing";
+  document.getElementById("write-hint").textContent = `Editing "${p.title}". The URL stays the same even if you change the title.`;
+  document.getElementById("f-title").value = p.title;
+  document.getElementById("f-date").value = p.date;
+  document.getElementById("f-excerpt").value = p.excerpt;
+  document.getElementById("f-body").value = p.body;
+  renderCategoryOptions();
+  document.getElementById("f-category").value = p.category || "";
+  document.getElementById("save-post").textContent = "Save changes";
+  document.getElementById("cancel-edit").hidden = false;
+  document.getElementById("delete-post").hidden = false;
+  document.getElementById("post-status").textContent = "";
+  showTab("write");
+  document.getElementById("write-section").scrollIntoView({ behavior: "smooth" });
+}
+
+function showTab(tab) {
+  const isPreview = tab === "preview";
+  document.getElementById("tab-write").classList.toggle("active", !isPreview);
+  document.getElementById("tab-preview").classList.toggle("active", isPreview);
+  document.getElementById("f-body").hidden = isPreview;
+  document.getElementById("f-preview").hidden = !isPreview;
+}
+
+document.getElementById("tab-write").addEventListener("click", () => showTab("write"));
+document.getElementById("tab-preview").addEventListener("click", async () => {
+  showTab("preview");
+  const preview = document.getElementById("f-preview");
+  preview.innerHTML = "<p>Rendering…</p>";
+  try {
+    const res = await fetch("/api/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: document.getElementById("f-body").value }),
+    });
+    const data = await res.json();
+    preview.innerHTML = data.html || "<p><em>Nothing to preview yet.</em></p>";
+  } catch (e) {
+    preview.innerHTML = "<p>Preview failed.</p>";
+  }
+});
+
+// ---------- Image upload + scribble insertion ----------
+
+function insertAtCursor(textarea, text) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? textarea.value.length;
+  const before = textarea.value.slice(0, start);
+  const needsNewlineBefore = before.length && !before.endsWith("\n");
+  const insert = (needsNewlineBefore ? "\n\n" : "") + text + "\n\n";
+  textarea.value = before + insert + textarea.value.slice(end);
+  const pos = start + insert.length;
+  textarea.focus();
+  textarea.setSelectionRange(pos, pos);
+}
+
+async function uploadImage(dataUrl, filename) {
+  const res = await fetch("/api/images", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl, filename }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Upload failed");
+  return res.json();
+}
+
+function humanizeFilename(name) {
+  return name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim() || "image";
+}
+
+document.getElementById("insert-image-btn").addEventListener("click", () => {
+  document.getElementById("image-file-input").click();
+});
+
+document.getElementById("image-file-input").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const status = document.getElementById("post-status");
+  status.className = "status";
+  status.textContent = "Uploading image…";
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const { url } = await uploadImage(dataUrl, file.name);
+    insertAtCursor(document.getElementById("f-body"), `![${humanizeFilename(file.name)}](${url})`);
+    status.textContent = "Image inserted.";
+  } catch (err) {
+    status.className = "status err";
+    status.textContent = err.message;
+  }
+});
+
+let scribbleCtx = null;
+let scribbleDrawing = false;
+
+function initScribbleCanvas() {
+  const canvas = document.getElementById("scribble-canvas");
+  scribbleCtx = canvas.getContext("2d");
+  clearScribble();
+
+  const posFromEvent = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    return [(e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height)];
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    scribbleDrawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    const [x, y] = posFromEvent(e);
+    scribbleCtx.beginPath();
+    scribbleCtx.moveTo(x, y);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!scribbleDrawing) return;
+    const [x, y] = posFromEvent(e);
+    scribbleCtx.lineTo(x, y);
+    scribbleCtx.strokeStyle = "#0a0a0a";
+    scribbleCtx.lineWidth = 3;
+    scribbleCtx.lineCap = "round";
+    scribbleCtx.lineJoin = "round";
+    scribbleCtx.stroke();
+  });
+  const stop = () => { scribbleDrawing = false; };
+  canvas.addEventListener("pointerup", stop);
+  canvas.addEventListener("pointerleave", stop);
+}
+
+function clearScribble() {
+  const canvas = document.getElementById("scribble-canvas");
+  scribbleCtx.fillStyle = "#fff";
+  scribbleCtx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+document.getElementById("insert-scribble-btn").addEventListener("click", () => {
+  const panel = document.getElementById("scribble-panel");
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden && !scribbleCtx) initScribbleCanvas();
+});
+
+document.getElementById("scribble-close").addEventListener("click", () => {
+  document.getElementById("scribble-panel").hidden = true;
+});
+
+document.getElementById("scribble-clear").addEventListener("click", clearScribble);
+
+document.getElementById("scribble-insert").addEventListener("click", async () => {
+  const status = document.getElementById("scribble-status");
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    const canvas = document.getElementById("scribble-canvas");
+    const dataUrl = canvas.toDataURL("image/png");
+    const { url } = await uploadImage(dataUrl, "scribble.png");
+    insertAtCursor(document.getElementById("f-body"), `![scribble](${url})`);
+    document.getElementById("scribble-panel").hidden = true;
+    status.textContent = "";
+  } catch (err) {
+    status.className = "status err";
+    status.textContent = err.message;
+  }
+});
+
+document.getElementById("cancel-edit").addEventListener("click", resetForm);
+
+document.getElementById("save-post").addEventListener("click", async () => {
+  const status = document.getElementById("post-status");
+  const payload = {
+    title: document.getElementById("f-title").value.trim(),
+    date: document.getElementById("f-date").value,
+    category: document.getElementById("f-category").value || null,
+    excerpt: document.getElementById("f-excerpt").value.trim(),
+    body: document.getElementById("f-body").value,
+  };
+  if (!payload.title) { status.className = "status err"; status.textContent = "Title is required."; return; }
+
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    let res;
+    if (editingFile) {
+      res = await fetch("/api/posts/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: editingFile, ...payload }),
+      });
+    } else {
+      res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+    state = await res.json();
+    renderPosts();
+    renderCategories();
+    resetForm();
+    status.className = "status ok";
+    status.textContent = "Published and rebuilt.";
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+document.getElementById("delete-post").addEventListener("click", async () => {
+  if (!editingFile) return;
+  if (!confirm("Delete this post? This can't be undone here (it's still in git history).")) return;
+  const status = document.getElementById("post-status");
+  status.className = "status";
+  status.textContent = "Deleting…";
+  try {
+    const res = await fetch("/api/posts/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: editingFile }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Delete failed");
+    state = await res.json();
+    renderPosts();
+    renderCategories();
+    resetForm();
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+// ---------- Categories ----------
 
 function renderCategories() {
   const wrap = document.getElementById("category-rows");
@@ -117,18 +486,58 @@ function renderCategories() {
 }
 
 function categoryRow(label, slug) {
-  const labelInput = el("input", { class: "cat-label", placeholder: "Label, e.g. Movies", value: label || "" });
-  const slugInput = el("input", { class: "cat-slug", placeholder: "slug (auto from label)", value: slug || "" });
+  const labelInput = el("input", { type: "text", class: "cat-label", placeholder: "Label, e.g. Movies", value: label || "" });
+  const slugInput = el("input", { type: "text", class: "cat-slug", placeholder: "slug (auto from label)", value: slug || "" });
   const removeBtn = el("button", { type: "button", title: "Remove", text: "×" });
   const row = el("div", { class: "cat-row" }, [labelInput, slugInput, removeBtn]);
   removeBtn.addEventListener("click", () => row.remove());
   return row;
 }
 
+document.getElementById("add-category").addEventListener("click", () => {
+  document.getElementById("category-rows").appendChild(categoryRow("", ""));
+});
+
+document.getElementById("save-categories").addEventListener("click", async () => {
+  const status = document.getElementById("cat-status");
+  const rows = Array.from(document.querySelectorAll("#category-rows .cat-row"));
+  const categories = rows
+    .map((row) => ({
+      label: row.querySelector(".cat-label").value.trim(),
+      slug: row.querySelector(".cat-slug").value.trim(),
+    }))
+    .filter((c) => c.label);
+
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+    state = await res.json();
+    renderCategories();
+    renderPosts();
+    renderCategoryOptions();
+    status.className = "status ok";
+    status.textContent = "Saved and rebuilt.";
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+// ---------- Posts table ----------
+
 function renderPosts() {
   const tbody = document.getElementById("post-rows");
   tbody.innerHTML = "";
   state.posts.forEach((p) => {
+    const titleBtn = el("button", { type: "button", class: "link-btn", text: p.title });
+    titleBtn.addEventListener("click", () => loadPostForEdit(p.file));
+
     const select = el("select", { "data-file": p.file });
     select.appendChild(el("option", { value: "" }, [document.createTextNode("— none —")]));
 
@@ -160,50 +569,33 @@ function renderPosts() {
       }
     });
 
-    const td = el("td", {}, [select, flash]);
+    const deleteBtn = el("button", { type: "button", class: "delete-link", text: "Delete" });
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm(`Delete "${p.title}"? This can't be undone here (it's still in git history).`)) return;
+      const res = await fetch("/api/posts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: p.file }),
+      });
+      if (res.ok) {
+        state = await res.json();
+        renderPosts();
+        renderCategories();
+        if (editingFile === p.file) resetForm();
+      }
+    });
+
     const row = el("tr", {}, [
-      el("td", { class: "title", text: p.title }),
+      el("td", {}, [titleBtn]),
       el("td", { class: "date", text: p.date }),
-      td,
+      el("td", {}, [select, flash]),
+      el("td", {}, [deleteBtn]),
     ]);
     tbody.appendChild(row);
   });
 }
 
-document.getElementById("add-category").addEventListener("click", () => {
-  document.getElementById("category-rows").appendChild(categoryRow("", ""));
-});
-
-document.getElementById("save-categories").addEventListener("click", async () => {
-  const status = document.getElementById("cat-status");
-  const rows = Array.from(document.querySelectorAll("#category-rows .cat-row"));
-  const categories = rows
-    .map((row) => ({
-      label: row.querySelector(".cat-label").value.trim(),
-      slug: row.querySelector(".cat-slug").value.trim(),
-    }))
-    .filter((c) => c.label);
-
-  status.className = "status";
-  status.textContent = "Saving…";
-  try {
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categories }),
-    });
-    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
-    state = await res.json();
-    renderCategories();
-    renderPosts();
-    status.className = "status ok";
-    status.textContent = "Saved and rebuilt.";
-  } catch (e) {
-    status.className = "status err";
-    status.textContent = e.message;
-  }
-});
-
+resetForm();
 loadData();
 </script>
 </body>

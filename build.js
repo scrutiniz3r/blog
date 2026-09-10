@@ -9,6 +9,7 @@ const path = require("path");
 
 const ROOT = __dirname;
 const CONTENT_DIR = path.join(ROOT, "content", "posts");
+const IMAGES_DIR = path.join(ROOT, "content", "images");
 const PUBLIC_DIR = path.join(ROOT, "public");
 const SRC_DIR = path.join(ROOT, "src");
 const CONFIG_PATH = path.join(ROOT, "config.json");
@@ -35,16 +36,24 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function inline(text) {
+// A leading "/" in an image src or link href is a site-root path (e.g. an
+// uploaded /images/*.png). basePath prefixes those so they still resolve
+// when the site is served from a sub-path (GitHub Pages project sites).
+function withBaseIfRooted(url, basePath) {
+  return url.startsWith("/") ? basePath + url : url;
+}
+
+function inline(text, basePath = "") {
   let out = escapeHtml(text);
   out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => `<img src="${withBaseIfRooted(src, basePath)}" alt="${alt}" loading="lazy">`);
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => `<a href="${withBaseIfRooted(href, basePath)}">${label}</a>`);
   return out;
 }
 
-function markdownToHtml(md) {
+function markdownToHtml(md, basePath = "") {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
   const html = [];
   let i = 0;
@@ -65,7 +74,7 @@ function markdownToHtml(md) {
     if (h) {
       closeList();
       const level = h[1].length + 1; // start headings at h2 inside post body
-      html.push(`<h${level}>${inline(h[2])}</h${level}>`);
+      html.push(`<h${level}>${inline(h[2], basePath)}</h${level}>`);
       i++; continue;
     }
 
@@ -83,21 +92,21 @@ function markdownToHtml(md) {
       closeList();
       const quote = [];
       while (i < lines.length && /^>\s?/.test(lines[i])) { quote.push(lines[i].replace(/^>\s?/, "")); i++; }
-      html.push(`<blockquote><p>${inline(quote.join(" "))}</p></blockquote>`);
+      html.push(`<blockquote><p>${inline(quote.join(" "), basePath)}</p></blockquote>`);
       continue;
     }
 
     const ul = line.match(/^[-*]\s+(.*)$/);
     if (ul) {
       if (listType !== "ul") { closeList(); html.push("<ul>"); listType = "ul"; }
-      html.push(`<li>${inline(ul[1])}</li>`);
+      html.push(`<li>${inline(ul[1], basePath)}</li>`);
       i++; continue;
     }
 
     const ol = line.match(/^\d+\.\s+(.*)$/);
     if (ol) {
       if (listType !== "ol") { closeList(); html.push("<ol>"); listType = "ol"; }
-      html.push(`<li>${inline(ol[1])}</li>`);
+      html.push(`<li>${inline(ol[1], basePath)}</li>`);
       i++; continue;
     }
 
@@ -107,7 +116,7 @@ function markdownToHtml(md) {
     while (i < lines.length && lines[i].trim() !== "" && !/^(#{1,3})\s|^```|^>\s?|^[-*]\s|^\d+\.\s|^---$/.test(lines[i])) {
       para.push(lines[i]); i++;
     }
-    html.push(`<p>${inline(para.join(" "))}</p>`);
+    html.push(`<p>${inline(para.join(" "), basePath)}</p>`);
   }
   closeList();
   return html.join("\n");
@@ -176,7 +185,7 @@ function build() {
   const posts = files.map((file) => {
     const raw = fs.readFileSync(path.join(CONTENT_DIR, file), "utf8");
     const { data, content } = parseFrontmatter(raw);
-    const bodyHtml = markdownToHtml(content);
+    const bodyHtml = markdownToHtml(content, basePath);
     const title = data.title || file.replace(/\.md$/, "");
     const date = data.date ? new Date(data.date + "T12:00:00Z") : new Date();
     const category = data.category ? slugify(data.category) : null;
@@ -354,6 +363,10 @@ ${items}
   fs.writeFileSync(path.join(PUBLIC_DIR, "rss.xml"), renderRss());
   fs.copyFileSync(path.join(SRC_DIR, "styles.css"), path.join(PUBLIC_DIR, "styles.css"));
 
+  if (fs.existsSync(IMAGES_DIR)) {
+    fs.cpSync(IMAGES_DIR, path.join(PUBLIC_DIR, "images"), { recursive: true });
+  }
+
   for (const p of posts) {
     const dir = path.join(PUBLIC_DIR, "posts", p.slug);
     fs.mkdirSync(dir, { recursive: true });
@@ -374,8 +387,11 @@ module.exports = {
   build,
   parseFrontmatter,
   setFrontmatterField,
+  markdownToHtml,
   slugify,
   CONTENT_DIR,
+  IMAGES_DIR,
+  PUBLIC_DIR,
   CONFIG_PATH,
 };
 
