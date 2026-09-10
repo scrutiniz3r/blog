@@ -8,8 +8,17 @@
   "accent": "#CFFF04",
   "language": "en-us",
   "categories": [
-    { "slug": "movies", "label": "Movies" },
-    { "slug": "wealth", "label": "Wealth" },
-    { "slug": "con-ideas", "label": "Con Ideas" }
+    {
+      "slug": "movies",
+      "label": "Movies"
+    },
+    {
+      "slug": "wealth",
+      "label": "Wealth"
+    },
+    {
+      "slug": "con-ideas",
+      "label": "Core Ideas"
+    }
   ]
 }

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Field Notes</title>
+<style>
+  :root {
+    --ink: #0a0a0a; --paper: #fbfbf8; --line: #ddddd6; --muted: #6b6b64; --accent: #CFFF04;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.5;
+  }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 1.4rem 2rem; border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 1.1rem; margin: 0; }
+  header a { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+  header a:hover { color: var(--ink); text-decoration: underline; }
+  main { max-width: 780px; margin: 0 auto; padding: 2rem; }
+  section { margin-bottom: 3rem; }
+  h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.3rem; }
+  .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.2rem; }
+  .cat-row { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; align-items: center; }
+  .cat-row input {
+    padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 4px;
+    font: inherit; background: #fff;
+  }
+  .cat-row .cat-label { flex: 2; }
+  .cat-row .cat-slug { flex: 1; color: var(--muted); font-size: 0.9em; }
+  .cat-row button {
+    border: none; background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 1.2rem; line-height: 1; padding: 0.2rem 0.5rem;
+  }
+  .cat-row button:hover { color: #c0392b; }
+  .row-actions { display: flex; gap: 0.7rem; align-items: center; margin-top: 0.8rem; }
+  button.primary, button.secondary {
+    font: inherit; border-radius: 4px; padding: 0.55rem 1rem; cursor: pointer;
+  }
+  button.primary { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
+  button.primary:hover { opacity: 0.85; }
+  button.secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  button.secondary:hover { border-color: var(--ink); }
+  .status { font-size: 0.85rem; color: var(--muted); }
+  .status.ok { color: #2f7a3d; }
+  .status.err { color: #c0392b; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  td.title { font-weight: 600; }
+  td.date { color: var(--muted); font-size: 0.9em; white-space: nowrap; }
+  select {
+    font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: #fff;
+  }
+  .row-flash { font-size: 0.8rem; color: var(--muted); margin-left: 0.5rem; }
+</style>
+</head>
+<body>
+<header>
+<h1>Field Notes — Admin</h1>
+<a href="/">View site &rarr;</a>
+</header>
+<main>
+<section id="categories-section">
+<h2>Categories</h2>
+<p class="hint">These drive the filter tabs on the homepage and the tag on every post. Rename, add, or delete them here.</p>
+<div id="category-rows"></div>
+<div class="row-actions">
+<button class="secondary" id="add-category" type="button">+ Add category</button>
+<button class="primary" id="save-categories" type="button">Save categories</button>
+<span class="status" id="cat-status"></span>
+</div>
+</section>
+
+<section id="posts-section">
+<h2>Posts</h2>
+<p class="hint">Assign a category to each post. Saves immediately when you change it.</p>
+<table>
+<thead><tr><th>Title</th><th>Date</th><th>Category</th></tr></thead>
+<tbody id="post-rows"></tbody>
+</table>
+</section>
+</main>
+
+<script>
+let state = { categories: [], posts: [] };
+
+function el(tag, attrs, children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "text") node.textContent = v;
+    else node.setAttribute(k, v);
+  }
+  for (const child of children || []) node.appendChild(child);
+  return node;
+}
+
+function titleCase(slug) {
+  return slug.split("-").map((w) => w ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
+}
+
+async function loadData() {
+  const res = await fetch("/api/data");
+  state = await res.json();
+  renderCategories();
+  renderPosts();
+}
+
+function renderCategories() {
+  const wrap = document.getElementById("category-rows");
+  wrap.innerHTML = "";
+  state.categories.forEach((c) => wrap.appendChild(categoryRow(c.label, c.slug)));
+}
+
+function categoryRow(label, slug) {
+  const labelInput = el("input", { class: "cat-label", placeholder: "Label, e.g. Movies", value: label || "" });
+  const slugInput = el("input", { class: "cat-slug", placeholder: "slug (auto from label)", value: slug || "" });
+  const removeBtn = el("button", { type: "button", title: "Remove", text: "×" });
+  const row = el("div", { class: "cat-row" }, [labelInput, slugInput, removeBtn]);
+  removeBtn.addEventListener("click", () => row.remove());
+  return row;
+}
+
+function renderPosts() {
+  const tbody = document.getElementById("post-rows");
+  tbody.innerHTML = "";
+  state.posts.forEach((p) => {
+    const select = el("select", { "data-file": p.file });
+    select.appendChild(el("option", { value: "" }, [document.createTextNode("— none —")]));
+
+    let options = state.categories.slice();
+    if (p.category && !options.some((c) => c.slug === p.category)) {
+      options = [{ slug: p.category, label: `(unlisted) ${titleCase(p.category)}` }, ...options];
+    }
+    options.forEach((c) => {
+      const opt = el("option", { value: c.slug }, [document.createTextNode(c.label)]);
+      if (c.slug === p.category) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    const flash = el("span", { class: "row-flash" });
+    select.addEventListener("change", async () => {
+      flash.textContent = "Saving…";
+      try {
+        const res = await fetch("/api/posts/category", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: p.file, category: select.value || null }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+        state = await res.json();
+        flash.textContent = "Saved";
+        setTimeout(() => { flash.textContent = ""; }, 1500);
+      } catch (e) {
+        flash.textContent = e.message;
+      }
+    });
+
+    const td = el("td", {}, [select, flash]);
+    const row = el("tr", {}, [
+      el("td", { class: "title", text: p.title }),
+      el("td", { class: "date", text: p.date }),
+      td,
+    ]);
+    tbody.appendChild(row);
+  });
+}
+
+document.getElementById("add-category").addEventListener("click", () => {
+  document.getElementById("category-rows").appendChild(categoryRow("", ""));
+});
+
+document.getElementById("save-categories").addEventListener("click", async () => {
+  const status = document.getElementById("cat-status");
+  const rows = Array.from(document.querySelectorAll("#category-rows .cat-row"));
+  const categories = rows
+    .map((row) => ({
+      label: row.querySelector(".cat-label").value.trim(),
+      slug: row.querySelector(".cat-slug").value.trim(),
+    }))
+    .filter((c) => c.label);
+
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+    state = await res.json();
+    renderCategories();
+    renderPosts();
+    status.className = "status ok";
+    status.textContent = "Saved and rebuilt.";
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+loadData();
+</script>
+</body>
+</html>

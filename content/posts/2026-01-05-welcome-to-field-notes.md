@@ -2,6 +2,7 @@
 title: Welcome to Field Notes
 date: 2026-01-05
 excerpt: Why this exists, what to expect, and why there's no algorithm deciding what you see.
+category: movies
 ---
 
 This is a newsletter in the oldest sense of the word: things worth noting, sent directly, on no schedule but the one dictated by having something to say.

@@ -2,6 +2,7 @@
 /**
  * Zero-dependency static site builder.
  * Reads content/posts/*.md -> writes public/{index.html, rss.xml, posts/<slug>/index.html}
+ * Exports build() so server.js can trigger a rebuild after admin edits.
  */
 const fs = require("fs");
 const path = require("path");
@@ -10,7 +11,7 @@ const ROOT = __dirname;
 const CONTENT_DIR = path.join(ROOT, "content", "posts");
 const PUBLIC_DIR = path.join(ROOT, "public");
 const SRC_DIR = path.join(ROOT, "src");
-const config = JSON.parse(fs.readFileSync(path.join(ROOT, "config.json"), "utf8"));
+const CONFIG_PATH = path.join(ROOT, "config.json");
 
 // ---------- tiny frontmatter parser ----------
 function parseFrontmatter(raw) {
@@ -120,48 +121,83 @@ function titleCase(slug) {
   return slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 }
 
-// ---------- categories (editable via config.json "categories") ----------
-const categories = config.categories || [];
-const categoryLabel = (slug) => {
-  const found = categories.find((c) => c.slug === slug);
-  return found ? found.label : titleCase(slug);
-};
-
 function excerptOf(html, len = 200) {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return text.length > len ? text.slice(0, len).trim() + "…" : text;
 }
 
-// ---------- load posts ----------
-const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith(".md"));
-const posts = files.map((file) => {
-  const raw = fs.readFileSync(path.join(CONTENT_DIR, file), "utf8");
-  const { data, content } = parseFrontmatter(raw);
-  const bodyHtml = markdownToHtml(content);
-  const title = data.title || file.replace(/\.md$/, "");
-  const date = data.date ? new Date(data.date + "T12:00:00Z") : new Date();
-  const category = data.category ? slugify(data.category) : null;
-  return {
-    title,
-    date,
-    slug: slugify(data.slug || title),
-    excerpt: data.excerpt || excerptOf(bodyHtml),
-    category,
-    categoryLabel: category ? categoryLabel(category) : null,
-    bodyHtml,
-  };
-}).sort((a, b) => b.date - a.date);
-
-// ---------- templates ----------
 function fmtDate(d) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 }
 
 function rfc822(d) { return d.toUTCString(); }
 
-function layout({ title, description, activePath, bodyHtml, canonicalPath }) {
-  const fullTitle = title === config.title ? config.title : `${title} — ${config.title}`;
-  return `<!doctype html>
+// Set/remove a single frontmatter field in a post's raw file text, preserving
+// everything else (field order, body, line endings) as-is.
+function setFrontmatterField(raw, key, value) {
+  const match = raw.match(/^(---\r?\n)([\s\S]*?)(\r?\n---\r?\n?)([\s\S]*)$/);
+  if (!match) throw new Error("File has no frontmatter block");
+  const [, open, fm, close, body] = match;
+  const lines = fm.split(/\r?\n/);
+  const idx = lines.findIndex((l) => {
+    const i = l.indexOf(":");
+    return i !== -1 && l.slice(0, i).trim() === key;
+  });
+  if (value === null || value === "") {
+    if (idx !== -1) lines.splice(idx, 1);
+  } else if (idx !== -1) {
+    lines[idx] = `${key}: ${value}`;
+  } else {
+    lines.push(`${key}: ${value}`);
+  }
+  return open + lines.join("\n") + close + body;
+}
+
+function xmlEscape(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+function build() {
+  const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+  const categories = config.categories || [];
+  const categoryLabel = (slug) => {
+    const found = categories.find((c) => c.slug === slug);
+    return found ? found.label : titleCase(slug);
+  };
+
+  const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith(".md"));
+  const posts = files.map((file) => {
+    const raw = fs.readFileSync(path.join(CONTENT_DIR, file), "utf8");
+    const { data, content } = parseFrontmatter(raw);
+    const bodyHtml = markdownToHtml(content);
+    const title = data.title || file.replace(/\.md$/, "");
+    const date = data.date ? new Date(data.date + "T12:00:00Z") : new Date();
+    const category = data.category ? slugify(data.category) : null;
+    return {
+      file,
+      title,
+      date,
+      slug: slugify(data.slug || title),
+      excerpt: data.excerpt || excerptOf(bodyHtml),
+      category,
+      categoryLabel: category ? categoryLabel(category) : null,
+      bodyHtml,
+    };
+  }).sort((a, b) => b.date - a.date);
+
+  // category pages: every configured category, plus any category still
+  // referenced by a post even if it's since been removed from config
+  // (avoids dead links from old posts/tags after an edit in /admin).
+  const categoryPages = new Map(categories.map((c) => [c.slug, c]));
+  for (const p of posts) {
+    if (p.category && !categoryPages.has(p.category)) {
+      categoryPages.set(p.category, { slug: p.category, label: p.categoryLabel });
+    }
+  }
+
+  function layout({ title, description, activePath, bodyHtml, canonicalPath }) {
+    const fullTitle = title === config.title ? config.title : `${title} — ${config.title}`;
+    return `<!doctype html>
 <html lang="${config.language}">
 <head>
 <meta charset="utf-8">
@@ -196,20 +232,20 @@ ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
 </body>
 </html>
 `;
-}
+  }
 
-function heroSvg() {
-  return fs.readFileSync(path.join(SRC_DIR, "hero.svg"), "utf8");
-}
+  function heroSvg() {
+    return fs.readFileSync(path.join(SRC_DIR, "hero.svg"), "utf8");
+  }
 
-function categoryNav(activeSlug) {
-  const items = [{ slug: null, label: "All", href: "/" }, ...categories.map((c) => ({ slug: c.slug, label: c.label, href: `/categories/${c.slug}/` }))];
-  const links = items.map((c) => `<a href="${c.href}"${c.slug === activeSlug ? ' aria-current="page"' : ""}>${escapeHtml(c.label)}</a>`).join("\n");
-  return `<nav class="category-nav">${links}</nav>`;
-}
+  function categoryNav(activeSlug) {
+    const items = [{ slug: null, label: "All", href: "/" }, ...categories.map((c) => ({ slug: c.slug, label: c.label, href: `/categories/${c.slug}/` }))];
+    const links = items.map((c) => `<a href="${c.href}"${c.slug === activeSlug ? ' aria-current="page"' : ""}>${escapeHtml(c.label)}</a>`).join("\n");
+    return `<nav class="category-nav">${links}</nav>`;
+  }
 
-function archiveListHtml(list) {
-  return list.map((p) => `
+  function archiveListHtml(list) {
+    return list.map((p) => `
 <li>
 <a class="post-row" href="/posts/${p.slug}/">
 <span class="post-row-date">${fmtDate(p.date)}${p.categoryLabel ? ` <span class="post-row-cat">${escapeHtml(p.categoryLabel)}</span>` : ""}</span>
@@ -219,10 +255,10 @@ function archiveListHtml(list) {
 </span>
 </a>
 </li>`).join("");
-}
+  }
 
-function renderIndex() {
-  const body = `
+  function renderIndex() {
+    const body = `
 <section class="hero">
 <div class="hero-grid">
 <p class="hero-eyebrow">${escapeHtml(config.tagline)}</p>
@@ -237,12 +273,12 @@ ${categoryNav(null)}
 </ul>
 </main>`;
 
-  return layout({ title: config.title, description: config.description, activePath: "/", bodyHtml: body, canonicalPath: "/" });
-}
+    return layout({ title: config.title, description: config.description, activePath: "/", bodyHtml: body, canonicalPath: "/" });
+  }
 
-function renderCategory(cat) {
-  const list = posts.filter((p) => p.category === cat.slug);
-  const body = `
+  function renderCategory(cat) {
+    const list = posts.filter((p) => p.category === cat.slug);
+    const body = `
 ${categoryNav(cat.slug)}
 <main class="wrap archive">
 <header class="archive-header"><h1>${escapeHtml(cat.label)}</h1></header>
@@ -250,17 +286,17 @@ ${categoryNav(cat.slug)}
 </ul>
 </main>`;
 
-  return layout({
-    title: cat.label,
-    description: `${cat.label} — ${config.description}`,
-    activePath: `/categories/${cat.slug}/`,
-    bodyHtml: body,
-    canonicalPath: `/categories/${cat.slug}/`,
-  });
-}
+    return layout({
+      title: cat.label,
+      description: `${cat.label} — ${config.description}`,
+      activePath: `/categories/${cat.slug}/`,
+      bodyHtml: body,
+      canonicalPath: `/categories/${cat.slug}/`,
+    });
+  }
 
-function renderPost(p) {
-  const body = `
+  function renderPost(p) {
+    const body = `
 <article class="post">
 <div class="wrap">
 <header class="post-header">
@@ -274,15 +310,11 @@ ${p.bodyHtml}
 </div>
 </article>`;
 
-  return layout({ title: p.title, description: p.excerpt, activePath: `/posts/${p.slug}/`, bodyHtml: body, canonicalPath: `/posts/${p.slug}/` });
-}
+    return layout({ title: p.title, description: p.excerpt, activePath: `/posts/${p.slug}/`, bodyHtml: body, canonicalPath: `/posts/${p.slug}/` });
+  }
 
-function xmlEscape(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-}
-
-function renderRss() {
-  const items = posts.map((p) => `
+  function renderRss() {
+    const items = posts.map((p) => `
 <item>
 <title>${xmlEscape(p.title)}</title>
 <link>${config.url}/posts/${p.slug}/</link>
@@ -292,7 +324,7 @@ function renderRss() {
 <content:encoded><![CDATA[${p.bodyHtml}]]></content:encoded>
 </item>`).join("");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
 <title>${xmlEscape(config.title)}</title>
@@ -305,26 +337,41 @@ ${items}
 </channel>
 </rss>
 `;
+  }
+
+  // ---------- write output ----------
+  fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+
+  fs.writeFileSync(path.join(PUBLIC_DIR, "index.html"), renderIndex());
+  fs.writeFileSync(path.join(PUBLIC_DIR, "rss.xml"), renderRss());
+  fs.copyFileSync(path.join(SRC_DIR, "styles.css"), path.join(PUBLIC_DIR, "styles.css"));
+
+  for (const p of posts) {
+    const dir = path.join(PUBLIC_DIR, "posts", p.slug);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), renderPost(p));
+  }
+
+  for (const cat of categoryPages.values()) {
+    const dir = path.join(PUBLIC_DIR, "categories", cat.slug);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), renderCategory(cat));
+  }
+
+  console.log(`Built ${posts.length} posts across ${categoryPages.size} categories -> public/`);
+  return { config, categories, posts };
 }
 
-// ---------- write output ----------
-fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
-fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+module.exports = {
+  build,
+  parseFrontmatter,
+  setFrontmatterField,
+  slugify,
+  CONTENT_DIR,
+  CONFIG_PATH,
+};
 
-fs.writeFileSync(path.join(PUBLIC_DIR, "index.html"), renderIndex());
-fs.writeFileSync(path.join(PUBLIC_DIR, "rss.xml"), renderRss());
-fs.copyFileSync(path.join(SRC_DIR, "styles.css"), path.join(PUBLIC_DIR, "styles.css"));
-
-for (const p of posts) {
-  const dir = path.join(PUBLIC_DIR, "posts", p.slug);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "index.html"), renderPost(p));
+if (require.main === module) {
+  build();
 }
-
-for (const cat of categories) {
-  const dir = path.join(PUBLIC_DIR, "categories", cat.slug);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "index.html"), renderCategory(cat));
-}
-
-console.log(`Built ${posts.length} posts across ${categories.length} categories -> public/`);
