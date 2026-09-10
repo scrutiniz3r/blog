@@ -2,16 +2,16 @@
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
 <title>Field Notes</title>
-<link>https://example.com</link>
-<atom:link href="https://example.com/rss.xml" rel="self" type="application/rss+xml"/>
+<link>https://scrutiniz3r.github.io/blog</link>
+<atom:link href="https://scrutiniz3r.github.io/blog/rss.xml" rel="self" type="application/rss+xml"/>
 <description>Short, occasional essays on ideas worth sitting with.</description>
 <language>en-us</language>
-<lastBuildDate>Thu, 10 Sep 2026 00:36:11 GMT</lastBuildDate>
+<lastBuildDate>Thu, 10 Sep 2026 19:02:03 GMT</lastBuildDate>
 
 <item>
 <title>The First Rule of Wealth Nobody Leads With</title>
-<link>https://example.com/posts/the-first-rule-of-wealth-nobody-leads-with/</link>
-<guid>https://example.com/posts/the-first-rule-of-wealth-nobody-leads-with/</guid>
+<link>https://scrutiniz3r.github.io/blog/posts/the-first-rule-of-wealth-nobody-leads-with/</link>
+<guid>https://scrutiniz3r.github.io/blog/posts/the-first-rule-of-wealth-nobody-leads-with/</guid>
 <pubDate>Sat, 11 Jul 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[Before allocation, before compounding, before any of it — the actual first move, and why it's boring on purpose.]]></description>
 <content:encoded><![CDATA[<p>Every wealth guide leads with the exciting part: index funds, compounding, asset allocation, the chart that goes up and to the right. Almost none of them lead with the part that actually determines whether you get to use any of it.</p>
@@ -26,8 +26,8 @@
 </item>
 <item>
 <title>A Note on This Design</title>
-<link>https://example.com/posts/a-note-on-this-design/</link>
-<guid>https://example.com/posts/a-note-on-this-design/</guid>
+<link>https://scrutiniz3r.github.io/blog/posts/a-note-on-this-design/</link>
+<guid>https://scrutiniz3r.github.io/blog/posts/a-note-on-this-design/</guid>
 <pubDate>Sat, 20 Jun 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[Why the homepage is off-center, why it's this particular green, and why that's the point.]]></description>
 <content:encoded><![CDATA[<p>The layout on this site is deliberately asymmetrical. The headline doesn't sit in the center of the page — it's pushed to one side, anchored to a grid, with a single graphic mark placed against it like a counterweight. Nothing here is centered because centered is the default, and the default doesn't ask you to look twice.</p>
@@ -38,8 +38,8 @@
 </item>
 <item>
 <title>The Film That Recalibrated My Clock</title>
-<link>https://example.com/posts/the-film-that-recalibrated-my-clock/</link>
-<guid>https://example.com/posts/the-film-that-recalibrated-my-clock/</guid>
+<link>https://scrutiniz3r.github.io/blog/posts/the-film-that-recalibrated-my-clock/</link>
+<guid>https://scrutiniz3r.github.io/blog/posts/the-film-that-recalibrated-my-clock/</guid>
 <pubDate>Sat, 02 May 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[A quiet drama about someone who ran out of time to be ordinary in, and what it changed about how I schedule mine.]]></description>
 <content:encoded><![CDATA[<p>There's a scene, about two-thirds through, where the main character does nothing for four full minutes. No dialogue, no score, just a person sitting with a decision they already know they've made. Most films would have cut it down to fifteen seconds. This one trusts you to sit in it.</p>
@@ -55,8 +55,8 @@
 </item>
 <item>
 <title>On Writing in Public</title>
-<link>https://example.com/posts/on-writing-in-public/</link>
-<guid>https://example.com/posts/on-writing-in-public/</guid>
+<link>https://scrutiniz3r.github.io/blog/posts/on-writing-in-public/</link>
+<guid>https://scrutiniz3r.github.io/blog/posts/on-writing-in-public/</guid>
 <pubDate>Sun, 15 Mar 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[The first draft is never for anyone else. The second one might be.]]></description>
 <content:encoded><![CDATA[<p>Most advice about writing online skips the part that actually matters: the first draft is not for your reader. It's for you, working out what you think by watching yourself say it.</p>
@@ -73,8 +73,8 @@
 </item>
 <item>
 <title>Welcome to Field Notes</title>
-<link>https://example.com/posts/welcome-to-field-notes/</link>
-<guid>https://example.com/posts/welcome-to-field-notes/</guid>
+<link>https://scrutiniz3r.github.io/blog/posts/welcome-to-field-notes/</link>
+<guid>https://scrutiniz3r.github.io/blog/posts/welcome-to-field-notes/</guid>
 <pubDate>Mon, 05 Jan 2026 12:00:00 GMT</pubDate>
 <description><![CDATA[Why this exists, what to expect, and why there's no algorithm deciding what you see.]]></description>
 <content:encoded><![CDATA[<p>This is a newsletter in the oldest sense of the word: things worth noting, sent directly, on no schedule but the one dictated by having something to say.</p>

@@ -26,6 +26,15 @@ npm run serve   # serves public/ at http://localhost:4000
 
 Or both at once: `npm start`.
 
+## Categories
+
+Categories are defined in `config.json`'s `categories` array and assigned to
+a post via `category: <slug>` in its frontmatter. Either edit those by hand,
+or run `npm run serve` and use the `/admin` page — it lists every category
+and post and saves straight back to `config.json` / the post files, then
+rebuilds. `/admin` has no login; it's a local-only tool, not something to
+expose on a public deployment (see Deploying below).
+
 ## Configuring
 
 Edit `config.json` — title, tagline, description, site URL, author, and the
@@ -36,6 +45,13 @@ accent color (the fluorescent green on the homepage hero).
 `public/` is a plain static site — drop it on Netlify, Vercel, GitHub Pages,
 or any static host. Set `url` in `config.json` to your real domain before
 building, since it's used in canonical links and the RSS feed.
+
+This repo deploys to **GitHub Pages** automatically via
+`.github/workflows/deploy.yml`: every push to `main` runs `node build.js`
+and publishes `public/` — nothing else, so `/admin` and the write API in
+`server.js` never leave your machine. One manual step is required once, in
+the GitHub web UI: **Settings → Pages → Build and deployment → Source →
+GitHub Actions**.
 
 ## Design
 
