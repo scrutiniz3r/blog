@@ -1,0 +1,11 @@
+{
+  "name": "field-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A minimal, Substack-esque static blog generator with RSS.",
+  "scripts": {
+    "build": "node build.js",
+    "serve": "node server.js",
+    "start": "npm run build && npm run serve"
+  }
+}

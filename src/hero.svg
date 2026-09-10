@@ -1,0 +1,23 @@
+<svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A minimal illustration of a keyring">
+  <g fill="#0a0a0a">
+    <circle cx="220" cy="150" r="82" fill="none" stroke="#0a0a0a" stroke-width="18"/>
+
+    <g transform="rotate(18 220 150)">
+      <rect x="208" y="222" width="20" height="188" rx="2"/>
+      <rect x="228" y="352" width="26" height="16"/>
+      <rect x="228" y="378" width="18" height="14"/>
+      <rect x="228" y="400" width="24" height="12"/>
+    </g>
+
+    <g transform="rotate(-24 220 150)">
+      <rect x="206" y="220" width="16" height="132" rx="2"/>
+      <circle cx="214" cy="352" r="19" fill="none" stroke="#0a0a0a" stroke-width="12"/>
+    </g>
+
+    <g transform="rotate(-3 220 150)">
+      <rect x="212" y="218" width="14" height="98" rx="2"/>
+      <rect x="182" y="300" width="14" height="32"/>
+      <rect x="182" y="300" width="50" height="14"/>
+    </g>
+  </g>
+</svg>

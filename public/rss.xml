@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>Field Notes</title>
+<link>https://example.com</link>
+<atom:link href="https://example.com/rss.xml" rel="self" type="application/rss+xml"/>
+<description>Short, occasional essays on ideas worth sitting with.</description>
+<language>en-us</language>
+<lastBuildDate>Thu, 10 Sep 2026 00:04:33 GMT</lastBuildDate>
+
+<item>
+<title>A Note on This Design</title>
+<link>https://example.com/posts/a-note-on-this-design/</link>
+<guid>https://example.com/posts/a-note-on-this-design/</guid>
+<pubDate>Sat, 20 Jun 2026 12:00:00 GMT</pubDate>
+<description><![CDATA[Why the homepage is off-center, why it's this particular green, and why that's the point.]]></description>
+<content:encoded><![CDATA[<p>The layout on this site is deliberately asymmetrical. The headline doesn't sit in the center of the page — it's pushed to one side, anchored to a grid, with a single graphic mark placed against it like a counterweight. Nothing here is centered because centered is the default, and the default doesn't ask you to look twice.</p>
+<p>This is an old idea. Swiss graphic designers in the mid-twentieth century built entire systems around it: a strict underlying grid, used not to constrain expression but to make asymmetry <em>legible</em> rather than arbitrary. Off-center, but not random — every position on this page answers to the same twelve-column structure.</p>
+<p>The type is a neo-grotesque sans for anything structural — titles, navigation, dates — because that family of typeface (Helvetica and its relatives) was built to disappear and let the hierarchy do the talking. The body text you're reading now is a serif instead, chosen for long-form reading rather than signage. Two jobs, two typefaces.</p>
+<p>And the color: one solid, saturated, slightly uncomfortable green. Not decoration — contrast. Stark black text on a field that vibrates a little at the edges of your vision. It's meant to be seen once and remembered, the way a good cover should be.</p>
+<p>None of this is subtle. That's also the point.</p>]]></content:encoded>
+</item>
+<item>
+<title>On Writing in Public</title>
+<link>https://example.com/posts/on-writing-in-public/</link>
+<guid>https://example.com/posts/on-writing-in-public/</guid>
+<pubDate>Sun, 15 Mar 2026 12:00:00 GMT</pubDate>
+<description><![CDATA[The first draft is never for anyone else. The second one might be.]]></description>
+<content:encoded><![CDATA[<p>Most advice about writing online skips the part that actually matters: the first draft is not for your reader. It's for you, working out what you think by watching yourself say it.</p>
+<p>The mistake is publishing that draft. The second mistake is never writing it at all, because you were waiting to already know what you meant.</p>
+<p>A method that works, roughly:</p>
+<ol>
+<li>Write the bad version fast, with no audience in mind.</li>
+<li>Leave it alone for a day.</li>
+<li>Come back and cut everything that was you finding the idea, not stating it.</li>
+</ol>
+<p>What's left is usually short. That's fine. Short and clear beats long and impressive almost every time, and it's much closer to the truth of what you actually think.</p>
+<blockquote><p>Simplicity is the ultimate sophistication — but only after you've earned it by going through the complicated version first.</p></blockquote>
+<p>Nobody skips the complicated version. They just don't publish it.</p>]]></content:encoded>
+</item>
+<item>
+<title>Welcome to Field Notes</title>
+<link>https://example.com/posts/welcome-to-field-notes/</link>
+<guid>https://example.com/posts/welcome-to-field-notes/</guid>
+<pubDate>Mon, 05 Jan 2026 12:00:00 GMT</pubDate>
+<description><![CDATA[Why this exists, what to expect, and why there's no algorithm deciding what you see.]]></description>
+<content:encoded><![CDATA[<p>This is a newsletter in the oldest sense of the word: things worth noting, sent directly, on no schedule but the one dictated by having something to say.</p>
+<p>There's no algorithm here. No engagement loop, no infinite scroll, no notification badge. If you want to keep reading, you subscribe to the <a href="/rss.xml">RSS feed</a> or you don't. That's the whole mechanism.</p>
+<p>A few things you can expect:</p>
+<ul>
+<li>Short essays, rarely more than a few hundred words</li>
+<li>No paywall, no tiers, no upsell</li>
+<li>Publishing when there's something worth publishing, not on a content calendar</li>
+</ul>
+<p>If that sounds like your kind of thing, welcome. If not — no hard feelings, and thanks for stopping by.</p>]]></content:encoded>
+</item>
+</channel>
+</rss>
