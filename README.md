@@ -36,6 +36,10 @@ npm run serve   # serves public/ at http://localhost:4000
 
 Or both at once: `npm start`.
 
+Want to write from your phone, not just `localhost`? See
+[`admin-app/`](admin-app/) — the same editor, rebuilt to run on Vercel and
+write straight to this repo via GitHub's API instead of local files.
+
 ## Categories
 
 Categories are defined in `config.json`'s `categories` array and assigned to

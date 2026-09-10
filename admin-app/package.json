@@ -1,0 +1,6 @@
+{
+  "name": "field-notes-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remote admin for the Field Notes blog: writes posts straight to GitHub via its API, so it can run on Vercel with no persistent disk."
+}

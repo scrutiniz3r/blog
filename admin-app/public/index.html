@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Field Notes</title>
+<style>
+  :root {
+    --ink: #0a0a0a; --paper: #fbfbf8; --line: #ddddd6; --muted: #6b6b64; --accent: #CFFF04;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.5;
+  }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 1.4rem 1.4rem; border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 1.05rem; margin: 0; }
+  header a { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+  header a:hover { color: var(--ink); text-decoration: underline; }
+  main { max-width: 780px; margin: 0 auto; padding: 1.4rem 1.2rem 3rem; }
+  section { margin-bottom: 3rem; }
+  h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.3rem; }
+  .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.2rem; }
+
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 1rem; }
+  input[type="text"], input[type="date"], textarea, select {
+    display: block; width: 100%; margin-top: 0.35rem;
+    padding: 0.6rem 0.65rem; border: 1px solid var(--line); border-radius: 4px;
+    font: inherit; font-size: 16px; background: #fff; color: var(--ink);
+  }
+  textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95rem; resize: vertical; }
+  .field-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .field-row label { flex: 1; min-width: 140px; }
+
+  .cat-row { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; align-items: center; }
+  .cat-row input { margin-top: 0; }
+  .cat-row .cat-label { flex: 2; }
+  .cat-row .cat-slug { flex: 1; color: var(--muted); font-size: 0.9em; }
+  .cat-row button {
+    border: none; background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 1.3rem; line-height: 1; padding: 0.3rem 0.6rem;
+  }
+  .cat-row button:hover { color: #c0392b; }
+
+  .row-actions { display: flex; gap: 0.7rem; align-items: center; margin-top: 0.8rem; flex-wrap: wrap; }
+  button.primary, button.secondary, button.danger {
+    font: inherit; border-radius: 4px; padding: 0.6rem 1rem; cursor: pointer;
+  }
+  button.primary { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
+  button.primary:hover { opacity: 0.85; }
+  button.secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  button.secondary:hover { border-color: var(--ink); }
+  button.danger { background: transparent; border: 1px solid #e2b4ac; color: #c0392b; }
+  button.danger:hover { background: #fdf1ef; }
+
+  .status { font-size: 0.85rem; color: var(--muted); }
+  .status.ok { color: #2f7a3d; }
+  .status.err { color: #c0392b; }
+
+  .editor-tabs { display: flex; gap: 0.4rem; margin: 0 0 0.35rem; flex-wrap: wrap; }
+  .tab-btn {
+    font: inherit; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    background: transparent; border: 1px solid var(--line); border-radius: 4px 4px 0 0; border-bottom: none;
+    padding: 0.4rem 0.7rem; cursor: pointer; color: var(--muted);
+  }
+  .tab-btn.active { color: var(--ink); background: #fff; }
+
+  .preview-pane {
+    border: 1px solid var(--line); border-radius: 4px; padding: 1rem 1.2rem;
+    min-height: 180px; background: #fff; font-family: Georgia, serif; line-height: 1.6;
+  }
+  .preview-pane h2, .preview-pane h3, .preview-pane h4 { font-family: inherit; }
+  .preview-pane blockquote { border-left: 3px solid var(--ink); margin: 0.8rem 0; padding-left: 1rem; color: var(--muted); font-style: italic; }
+  .preview-pane :first-child { margin-top: 0; }
+  .preview-pane img { max-width: 100%; height: auto; border-radius: 3px; }
+
+  .scribble-panel { margin-top: 0.6rem; border: 1px solid var(--line); border-radius: 4px; padding: 0.8rem; background: #fff; }
+  #scribble-canvas { display: block; width: 100%; max-width: 640px; height: auto; border: 1px dashed var(--line); border-radius: 3px; touch-action: none; cursor: crosshair; background: #fff; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 0.6rem 0.3rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  td.date { color: var(--muted); font-size: 0.85em; white-space: nowrap; }
+  .link-btn {
+    background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--ink);
+    cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line);
+  }
+  .link-btn:hover { text-decoration-color: var(--ink); }
+  .delete-link {
+    background: none; border: none; padding: 0; font: inherit; font-size: 0.8rem; color: var(--muted);
+    cursor: pointer; text-decoration: underline; text-decoration-color: var(--line);
+  }
+  .delete-link:hover { color: #c0392b; text-decoration-color: #c0392b; }
+  .row-flash { font-size: 0.8rem; color: var(--muted); margin-left: 0.5rem; }
+
+  @media (max-width: 480px) {
+    table, thead, tbody, tr { display: block; }
+    thead { display: none; }
+    tr { border-bottom: 1px solid var(--line); padding: 0.7rem 0; }
+    td { border: none; padding: 0.2rem 0; display: flex; justify-content: space-between; gap: 0.6rem; }
+    td.date::before { content: "Date"; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; }
+  }
+</style>
+</head>
+<body>
+<header>
+<h1>Field Notes — Admin</h1>
+<a href="https://scrutiniz3r.github.io/blog/" target="_blank" rel="noopener">View site &rarr;</a>
+</header>
+<main>
+
+<section id="write-section">
+<h2 id="write-heading">Write</h2>
+<p class="hint" id="write-hint">New post. Saves commit straight to GitHub, which rebuilds and republishes the site automatically.</p>
+
+<label>Title
+<input type="text" id="f-title" placeholder="Post title">
+</label>
+
+<div class="field-row">
+<label>Date
+<input type="date" id="f-date">
+</label>
+<label>Category
+<select id="f-category"></select>
+</label>
+</div>
+
+<label>Excerpt
+<input type="text" id="f-excerpt" placeholder="One sentence for the archive list and RSS description">
+</label>
+
+<label>Body
+<div class="editor-tabs">
+<button type="button" class="tab-btn active" id="tab-write">Write</button>
+<button type="button" class="tab-btn" id="tab-preview">Preview</button>
+<span style="flex:1"></span>
+<button type="button" class="tab-btn" id="insert-image-btn">+ Image</button>
+<button type="button" class="tab-btn" id="insert-scribble-btn">+ Scribble</button>
+<input type="file" id="image-file-input" accept="image/*" capture="environment" hidden>
+</div>
+<textarea id="f-body" rows="14" placeholder="Write the post in Markdown…"></textarea>
+<div id="f-preview" class="preview-pane" hidden></div>
+
+<div id="scribble-panel" class="scribble-panel" hidden>
+<canvas id="scribble-canvas" width="640" height="320"></canvas>
+<div class="row-actions">
+<button class="secondary" type="button" id="scribble-clear">Clear</button>
+<button class="primary" type="button" id="scribble-insert">Insert scribble</button>
+<button class="secondary" type="button" id="scribble-close">Close</button>
+<span class="status" id="scribble-status"></span>
+</div>
+</div>
+</label>
+
+<div class="row-actions">
+<button class="primary" id="save-post" type="button">Publish post</button>
+<button class="secondary" id="cancel-edit" type="button" hidden>Cancel edit</button>
+<button class="danger" id="delete-post" type="button" hidden>Delete post</button>
+<span class="status" id="post-status"></span>
+</div>
+</section>
+
+<section id="posts-section">
+<h2>Posts</h2>
+<p class="hint">Tap a title to edit it. Category changes save immediately.</p>
+<table>
+<thead><tr><th>Title</th><th>Date</th><th>Category</th><th></th></tr></thead>
+<tbody id="post-rows"></tbody>
+</table>
+</section>
+
+<section id="categories-section">
+<h2>Categories</h2>
+<p class="hint">These drive the filter tabs on the homepage and the tag on every post.</p>
+<div id="category-rows"></div>
+<div class="row-actions">
+<button class="secondary" id="add-category" type="button">+ Add category</button>
+<button class="primary" id="save-categories" type="button">Save categories</button>
+<span class="status" id="cat-status"></span>
+</div>
+</section>
+
+</main>
+
+<script>
+let state = { categories: [], posts: [] };
+let editingFile = null;
+
+function el(tag, attrs, children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "text") node.textContent = v;
+    else node.setAttribute(k, v);
+  }
+  for (const child of children || []) node.appendChild(child);
+  return node;
+}
+
+function titleCase(slug) {
+  return slug.split("-").map((w) => w ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
+}
+
+function todayIso() {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d - tz).toISOString().slice(0, 10);
+}
+
+async function loadData() {
+  const res = await fetch("/api/data");
+  state = await res.json();
+  renderCategories();
+  renderPosts();
+  renderCategoryOptions();
+}
+
+// ---------- Write / edit form ----------
+
+function renderCategoryOptions() {
+  const select = document.getElementById("f-category");
+  const current = select.value;
+  select.innerHTML = "";
+  select.appendChild(el("option", { value: "" }, [document.createTextNode("— none —")]));
+  state.categories.forEach((c) => select.appendChild(el("option", { value: c.slug }, [document.createTextNode(c.label)])));
+  if ([...select.options].some((o) => o.value === current)) select.value = current;
+}
+
+function resetForm() {
+  editingFile = null;
+  document.getElementById("write-heading").textContent = "Write";
+  document.getElementById("write-hint").textContent = "New post. Saves commit straight to GitHub, which rebuilds and republishes the site automatically.";
+  document.getElementById("f-title").value = "";
+  document.getElementById("f-date").value = todayIso();
+  document.getElementById("f-excerpt").value = "";
+  document.getElementById("f-body").value = "";
+  renderCategoryOptions();
+  document.getElementById("f-category").value = "";
+  document.getElementById("save-post").textContent = "Publish post";
+  document.getElementById("cancel-edit").hidden = true;
+  document.getElementById("delete-post").hidden = true;
+  document.getElementById("post-status").textContent = "";
+  showTab("write");
+}
+
+async function loadPostForEdit(file) {
+  const res = await fetch("/api/posts/content?file=" + encodeURIComponent(file));
+  if (!res.ok) return;
+  const p = await res.json();
+  editingFile = p.file;
+  document.getElementById("write-heading").textContent = "Editing";
+  document.getElementById("write-hint").textContent = `Editing "${p.title}". The URL stays the same even if you change the title.`;
+  document.getElementById("f-title").value = p.title;
+  document.getElementById("f-date").value = p.date;
+  document.getElementById("f-excerpt").value = p.excerpt;
+  document.getElementById("f-body").value = p.body;
+  renderCategoryOptions();
+  document.getElementById("f-category").value = p.category || "";
+  document.getElementById("save-post").textContent = "Save changes";
+  document.getElementById("cancel-edit").hidden = false;
+  document.getElementById("delete-post").hidden = false;
+  document.getElementById("post-status").textContent = "";
+  showTab("write");
+  document.getElementById("write-section").scrollIntoView({ behavior: "smooth" });
+}
+
+function showTab(tab) {
+  const isPreview = tab === "preview";
+  document.getElementById("tab-write").classList.toggle("active", !isPreview);
+  document.getElementById("tab-preview").classList.toggle("active", isPreview);
+  document.getElementById("f-body").hidden = isPreview;
+  document.getElementById("f-preview").hidden = !isPreview;
+}
+
+document.getElementById("tab-write").addEventListener("click", () => showTab("write"));
+document.getElementById("tab-preview").addEventListener("click", async () => {
+  showTab("preview");
+  const preview = document.getElementById("f-preview");
+  preview.innerHTML = "<p>Rendering…</p>";
+  try {
+    const res = await fetch("/api/render", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: document.getElementById("f-body").value }),
+    });
+    const data = await res.json();
+    preview.innerHTML = data.html || "<p><em>Nothing to preview yet.</em></p>";
+  } catch (e) {
+    preview.innerHTML = "<p>Preview failed.</p>";
+  }
+});
+
+// ---------- Image upload + scribble insertion ----------
+
+function insertAtCursor(textarea, text) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? textarea.value.length;
+  const before = textarea.value.slice(0, start);
+  const needsNewlineBefore = before.length && !before.endsWith("\n");
+  const insert = (needsNewlineBefore ? "\n\n" : "") + text + "\n\n";
+  textarea.value = before + insert + textarea.value.slice(end);
+  const pos = start + insert.length;
+  textarea.focus();
+  textarea.setSelectionRange(pos, pos);
+}
+
+async function uploadImage(dataUrl, filename) {
+  const res = await fetch("/api/images", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl, filename }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Upload failed");
+  return res.json();
+}
+
+function humanizeFilename(name) {
+  return name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim() || "image";
+}
+
+// Phone camera photos can be several MB — downscale + re-encode as JPEG
+// client-side before upload so it stays fast and under the request size
+// limit, without needing a resize step on the server.
+function downscaleImageFile(file, maxDim = 1600, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL(file.type === "image/png" ? "image/png" : "image/jpeg", quality));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+document.getElementById("insert-image-btn").addEventListener("click", () => {
+  document.getElementById("image-file-input").click();
+});
+
+document.getElementById("image-file-input").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const status = document.getElementById("post-status");
+  status.className = "status";
+  status.textContent = "Uploading image…";
+  try {
+    const dataUrl = await downscaleImageFile(file);
+    const { url } = await uploadImage(dataUrl, file.name);
+    insertAtCursor(document.getElementById("f-body"), `![${humanizeFilename(file.name)}](${url})`);
+    status.textContent = "Image inserted.";
+  } catch (err) {
+    status.className = "status err";
+    status.textContent = err.message || "Upload failed";
+  }
+});
+
+let scribbleCtx = null;
+let scribbleDrawing = false;
+
+function initScribbleCanvas() {
+  const canvas = document.getElementById("scribble-canvas");
+  scribbleCtx = canvas.getContext("2d");
+  clearScribble();
+
+  const posFromEvent = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    return [(e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height)];
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    scribbleDrawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    const [x, y] = posFromEvent(e);
+    scribbleCtx.beginPath();
+    scribbleCtx.moveTo(x, y);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!scribbleDrawing) return;
+    const [x, y] = posFromEvent(e);
+    scribbleCtx.lineTo(x, y);
+    scribbleCtx.strokeStyle = "#0a0a0a";
+    scribbleCtx.lineWidth = 3;
+    scribbleCtx.lineCap = "round";
+    scribbleCtx.lineJoin = "round";
+    scribbleCtx.stroke();
+  });
+  const stop = () => { scribbleDrawing = false; };
+  canvas.addEventListener("pointerup", stop);
+  canvas.addEventListener("pointerleave", stop);
+}
+
+function clearScribble() {
+  const canvas = document.getElementById("scribble-canvas");
+  scribbleCtx.fillStyle = "#fff";
+  scribbleCtx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+document.getElementById("insert-scribble-btn").addEventListener("click", () => {
+  const panel = document.getElementById("scribble-panel");
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden && !scribbleCtx) initScribbleCanvas();
+});
+
+document.getElementById("scribble-close").addEventListener("click", () => {
+  document.getElementById("scribble-panel").hidden = true;
+});
+
+document.getElementById("scribble-clear").addEventListener("click", clearScribble);
+
+document.getElementById("scribble-insert").addEventListener("click", async () => {
+  const status = document.getElementById("scribble-status");
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    const canvas = document.getElementById("scribble-canvas");
+    const dataUrl = canvas.toDataURL("image/png");
+    const { url } = await uploadImage(dataUrl, "scribble.png");
+    insertAtCursor(document.getElementById("f-body"), `![scribble](${url})`);
+    document.getElementById("scribble-panel").hidden = true;
+    status.textContent = "";
+  } catch (err) {
+    status.className = "status err";
+    status.textContent = err.message;
+  }
+});
+
+// ---------- Save / delete post ----------
+
+document.getElementById("cancel-edit").addEventListener("click", resetForm);
+
+document.getElementById("save-post").addEventListener("click", async () => {
+  const status = document.getElementById("post-status");
+  const payload = {
+    title: document.getElementById("f-title").value.trim(),
+    date: document.getElementById("f-date").value,
+    category: document.getElementById("f-category").value || null,
+    excerpt: document.getElementById("f-excerpt").value.trim(),
+    body: document.getElementById("f-body").value,
+  };
+  if (!payload.title) { status.className = "status err"; status.textContent = "Title is required."; return; }
+
+  status.className = "status";
+  status.textContent = "Committing to GitHub…";
+  try {
+    const res = await fetch(editingFile ? "/api/posts/update" : "/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editingFile ? { file: editingFile, ...payload } : payload),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+    state = await res.json();
+    renderPosts();
+    renderCategories();
+    resetForm();
+    status.className = "status ok";
+    status.textContent = "Committed — the site will rebuild shortly.";
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+document.getElementById("delete-post").addEventListener("click", async () => {
+  if (!editingFile) return;
+  if (!confirm("Delete this post? This can't be undone here (it's still in git history).")) return;
+  const status = document.getElementById("post-status");
+  status.className = "status";
+  status.textContent = "Deleting…";
+  try {
+    const res = await fetch("/api/posts/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: editingFile }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Delete failed");
+    state = await res.json();
+    renderPosts();
+    renderCategories();
+    resetForm();
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+// ---------- Categories ----------
+
+function renderCategories() {
+  const wrap = document.getElementById("category-rows");
+  wrap.innerHTML = "";
+  state.categories.forEach((c) => wrap.appendChild(categoryRow(c.label, c.slug)));
+}
+
+function categoryRow(label, slug) {
+  const labelInput = el("input", { type: "text", class: "cat-label", placeholder: "Label, e.g. Movies", value: label || "" });
+  const slugInput = el("input", { type: "text", class: "cat-slug", placeholder: "slug (auto)", value: slug || "" });
+  const removeBtn = el("button", { type: "button", title: "Remove", text: "×" });
+  const row = el("div", { class: "cat-row" }, [labelInput, slugInput, removeBtn]);
+  removeBtn.addEventListener("click", () => row.remove());
+  return row;
+}
+
+document.getElementById("add-category").addEventListener("click", () => {
+  document.getElementById("category-rows").appendChild(categoryRow("", ""));
+});
+
+document.getElementById("save-categories").addEventListener("click", async () => {
+  const status = document.getElementById("cat-status");
+  const rows = Array.from(document.querySelectorAll("#category-rows .cat-row"));
+  const categories = rows
+    .map((row) => ({
+      label: row.querySelector(".cat-label").value.trim(),
+      slug: row.querySelector(".cat-slug").value.trim(),
+    }))
+    .filter((c) => c.label);
+
+  status.className = "status";
+  status.textContent = "Saving…";
+  try {
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+    state = await res.json();
+    renderCategories();
+    renderPosts();
+    renderCategoryOptions();
+    status.className = "status ok";
+    status.textContent = "Committed — the site will rebuild shortly.";
+  } catch (e) {
+    status.className = "status err";
+    status.textContent = e.message;
+  }
+});
+
+// ---------- Posts table ----------
+
+function renderPosts() {
+  const tbody = document.getElementById("post-rows");
+  tbody.innerHTML = "";
+  state.posts.forEach((p) => {
+    const titleBtn = el("button", { type: "button", class: "link-btn", text: p.title });
+    titleBtn.addEventListener("click", () => loadPostForEdit(p.file));
+
+    const select = el("select", { "data-file": p.file });
+    select.appendChild(el("option", { value: "" }, [document.createTextNode("— none —")]));
+
+    let options = state.categories.slice();
+    if (p.category && !options.some((c) => c.slug === p.category)) {
+      options = [{ slug: p.category, label: `(unlisted) ${titleCase(p.category)}` }, ...options];
+    }
+    options.forEach((c) => {
+      const opt = el("option", { value: c.slug }, [document.createTextNode(c.label)]);
+      if (c.slug === p.category) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    const flash = el("span", { class: "row-flash" });
+    select.addEventListener("change", async () => {
+      flash.textContent = "Saving…";
+      try {
+        const res = await fetch("/api/posts/category", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: p.file, category: select.value || null }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+        state = await res.json();
+        flash.textContent = "Saved";
+        setTimeout(() => { flash.textContent = ""; }, 1500);
+      } catch (e) {
+        flash.textContent = e.message;
+      }
+    });
+
+    const deleteBtn = el("button", { type: "button", class: "delete-link", text: "Delete" });
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm(`Delete "${p.title}"? This can't be undone here (it's still in git history).`)) return;
+      const res = await fetch("/api/posts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: p.file }),
+      });
+      if (res.ok) {
+        state = await res.json();
+        renderPosts();
+        renderCategories();
+        if (editingFile === p.file) resetForm();
+      }
+    });
+
+    const row = el("tr", {}, [
+      el("td", {}, [titleBtn]),
+      el("td", { class: "date", text: p.date }),
+      el("td", {}, [select, flash]),
+      el("td", {}, [deleteBtn]),
+    ]);
+    tbody.appendChild(row);
+  });
+}
+
+resetForm();
+loadData();
+</script>
+</body>
+</html>
