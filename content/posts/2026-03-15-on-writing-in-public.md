@@ -1,6 +1,7 @@
 ---
 title: On Writing in Public
 date: 2026-03-15
+category: con-ideas
 excerpt: The first draft is never for anyone else. The second one might be.
 ---
 

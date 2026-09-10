@@ -1,6 +1,7 @@
 ---
 title: A Note on This Design
 date: 2026-06-20
+category: con-ideas
 excerpt: Why the homepage is off-center, why it's this particular green, and why that's the point.
 ---
 

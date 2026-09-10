@@ -116,6 +116,17 @@ function slugify(s) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+function titleCase(slug) {
+  return slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
+// ---------- categories (editable via config.json "categories") ----------
+const categories = config.categories || [];
+const categoryLabel = (slug) => {
+  const found = categories.find((c) => c.slug === slug);
+  return found ? found.label : titleCase(slug);
+};
+
 function excerptOf(html, len = 200) {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return text.length > len ? text.slice(0, len).trim() + "…" : text;
@@ -129,11 +140,14 @@ const posts = files.map((file) => {
   const bodyHtml = markdownToHtml(content);
   const title = data.title || file.replace(/\.md$/, "");
   const date = data.date ? new Date(data.date + "T12:00:00Z") : new Date();
+  const category = data.category ? slugify(data.category) : null;
   return {
     title,
     date,
     slug: slugify(data.slug || title),
     excerpt: data.excerpt || excerptOf(bodyHtml),
+    category,
+    categoryLabel: category ? categoryLabel(category) : null,
     bodyHtml,
   };
 }).sort((a, b) => b.date - a.date);
@@ -174,7 +188,10 @@ function layout({ title, description, activePath, bodyHtml, canonicalPath }) {
 ${bodyHtml}
 <footer class="site-footer">
 <span>&copy; ${new Date().getFullYear()} ${escapeHtml(config.author)}</span>
+<span class="site-footer-links">
+${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
 <a href="/rss.xml">Subscribe via RSS</a>
+</span>
 </footer>
 </body>
 </html>
@@ -185,19 +202,26 @@ function heroSvg() {
   return fs.readFileSync(path.join(SRC_DIR, "hero.svg"), "utf8");
 }
 
-function renderIndex() {
-  const latest = posts[0];
-  const listItems = posts.map((p) => `
+function categoryNav(activeSlug) {
+  const items = [{ slug: null, label: "All", href: "/" }, ...categories.map((c) => ({ slug: c.slug, label: c.label, href: `/categories/${c.slug}/` }))];
+  const links = items.map((c) => `<a href="${c.href}"${c.slug === activeSlug ? ' aria-current="page"' : ""}>${escapeHtml(c.label)}</a>`).join("\n");
+  return `<nav class="category-nav">${links}</nav>`;
+}
+
+function archiveListHtml(list) {
+  return list.map((p) => `
 <li>
 <a class="post-row" href="/posts/${p.slug}/">
-<span class="post-row-date">${fmtDate(p.date)}</span>
+<span class="post-row-date">${fmtDate(p.date)}${p.categoryLabel ? ` <span class="post-row-cat">${escapeHtml(p.categoryLabel)}</span>` : ""}</span>
 <span>
 <h2 class="post-row-title">${escapeHtml(p.title)}</h2>
 <p class="post-row-excerpt">${escapeHtml(p.excerpt)}</p>
 </span>
 </a>
 </li>`).join("");
+}
 
+function renderIndex() {
   const body = `
 <section class="hero">
 <div class="hero-grid">
@@ -207,12 +231,32 @@ function renderIndex() {
 <div class="hero-graphic">${heroSvg()}</div>
 </div>
 </section>
+${categoryNav(null)}
 <main class="wrap archive">
-<ul class="archive-list">${listItems}
+<ul class="archive-list">${archiveListHtml(posts)}
 </ul>
 </main>`;
 
   return layout({ title: config.title, description: config.description, activePath: "/", bodyHtml: body, canonicalPath: "/" });
+}
+
+function renderCategory(cat) {
+  const list = posts.filter((p) => p.category === cat.slug);
+  const body = `
+${categoryNav(cat.slug)}
+<main class="wrap archive">
+<header class="archive-header"><h1>${escapeHtml(cat.label)}</h1></header>
+<ul class="archive-list">${archiveListHtml(list)}
+</ul>
+</main>`;
+
+  return layout({
+    title: cat.label,
+    description: `${cat.label} — ${config.description}`,
+    activePath: `/categories/${cat.slug}/`,
+    bodyHtml: body,
+    canonicalPath: `/categories/${cat.slug}/`,
+  });
 }
 
 function renderPost(p) {
@@ -220,7 +264,7 @@ function renderPost(p) {
 <article class="post">
 <div class="wrap">
 <header class="post-header">
-<p class="kicker">${fmtDate(p.date)}</p>
+<p class="kicker">${fmtDate(p.date)}${p.categoryLabel ? ` &middot; <a href="/categories/${p.category}/">${escapeHtml(p.categoryLabel)}</a>` : ""}</p>
 <h1>${escapeHtml(p.title)}</h1>
 </header>
 <div class="post-body">
@@ -277,4 +321,10 @@ for (const p of posts) {
   fs.writeFileSync(path.join(dir, "index.html"), renderPost(p));
 }
 
-console.log(`Built ${posts.length} posts -> public/`);
+for (const cat of categories) {
+  const dir = path.join(PUBLIC_DIR, "categories", cat.slug);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "index.html"), renderCategory(cat));
+}
+
+console.log(`Built ${posts.length} posts across ${categories.length} categories -> public/`);

@@ -3,7 +3,13 @@
   "tagline": "A newsletter, kept in the margins.",
   "description": "Short, occasional essays on ideas worth sitting with.",
   "url": "https://example.com",
-  "author": "Your Name",
+  "author": "Abbiraam",
+  "linkedin": "https://www.linkedin.com/in/abbiraam/",
   "accent": "#CFFF04",
-  "language": "en-us"
+  "language": "en-us",
+  "categories": [
+    { "slug": "movies", "label": "Movies" },
+    { "slug": "wealth", "label": "Wealth" },
+    { "slug": "con-ideas", "label": "Con Ideas" }
+  ]
 }
