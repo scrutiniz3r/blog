@@ -165,6 +165,13 @@ function build() {
     return found ? found.label : titleCase(slug);
   };
 
+  // Sub-path the site is served under (e.g. "/blog" for a GitHub Pages
+  // project site at username.github.io/blog); "" for a root/custom domain.
+  // Separate from config.url on purpose: config.url is the full canonical
+  // origin+path, but local preview always serves at "/" regardless of it.
+  const basePath = (config.basePath || "").replace(/\/$/, "");
+  const withBase = (p) => basePath + p;
+
   const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith(".md"));
   const posts = files.map((file) => {
     const raw = fs.readFileSync(path.join(CONTENT_DIR, file), "utf8");
@@ -210,15 +217,15 @@ function build() {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="${withBase("/styles.css")}">
 <style>:root{--accent:${config.accent};}</style>
 </head>
 <body>
 <header class="site-header">
-<a class="mark" href="/">${escapeHtml(config.title)}</a>
+<a class="mark" href="${withBase("/")}">${escapeHtml(config.title)}</a>
 <nav>
-<a href="/"${activePath === "/" ? ' aria-current="page"' : ""}>Archive</a>
-<a href="/rss.xml">RSS</a>
+<a href="${withBase("/")}"${activePath === "/" ? ' aria-current="page"' : ""}>Archive</a>
+<a href="${withBase("/rss.xml")}">RSS</a>
 </nav>
 </header>
 ${bodyHtml}
@@ -226,7 +233,7 @@ ${bodyHtml}
 <span>&copy; ${new Date().getFullYear()} ${escapeHtml(config.author)}</span>
 <span class="site-footer-links">
 ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
-<a href="/rss.xml">Subscribe via RSS</a>
+<a href="${withBase("/rss.xml")}">Subscribe via RSS</a>
 </span>
 </footer>
 </body>
@@ -239,7 +246,7 @@ ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
   }
 
   function categoryNav(activeSlug) {
-    const items = [{ slug: null, label: "All", href: "/" }, ...categories.map((c) => ({ slug: c.slug, label: c.label, href: `/categories/${c.slug}/` }))];
+    const items = [{ slug: null, label: "All", href: withBase("/") }, ...categories.map((c) => ({ slug: c.slug, label: c.label, href: withBase(`/categories/${c.slug}/`) }))];
     const links = items.map((c) => `<a href="${c.href}"${c.slug === activeSlug ? ' aria-current="page"' : ""}>${escapeHtml(c.label)}</a>`).join("\n");
     return `<nav class="category-nav">${links}</nav>`;
   }
@@ -247,7 +254,7 @@ ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
   function archiveListHtml(list) {
     return list.map((p) => `
 <li>
-<a class="post-row" href="/posts/${p.slug}/">
+<a class="post-row" href="${withBase(`/posts/${p.slug}/`)}">
 <span class="post-row-date">${fmtDate(p.date)}${p.categoryLabel ? ` <span class="post-row-cat">${escapeHtml(p.categoryLabel)}</span>` : ""}</span>
 <span>
 <h2 class="post-row-title">${escapeHtml(p.title)}</h2>
@@ -300,12 +307,12 @@ ${categoryNav(cat.slug)}
 <article class="post">
 <div class="wrap">
 <header class="post-header">
-<p class="kicker">${fmtDate(p.date)}${p.categoryLabel ? ` &middot; <a href="/categories/${p.category}/">${escapeHtml(p.categoryLabel)}</a>` : ""}</p>
+<p class="kicker">${fmtDate(p.date)}${p.categoryLabel ? ` &middot; <a href="${withBase(`/categories/${p.category}/`)}">${escapeHtml(p.categoryLabel)}</a>` : ""}</p>
 <h1>${escapeHtml(p.title)}</h1>
 </header>
 <div class="post-body">
 ${p.bodyHtml}
-<div class="post-footer"><a href="/">&larr; Back to archive</a></div>
+<div class="post-footer"><a href="${withBase("/")}">&larr; Back to archive</a></div>
 </div>
 </div>
 </article>`;

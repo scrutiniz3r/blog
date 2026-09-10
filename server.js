@@ -15,6 +15,19 @@ const PUBLIC_DIR = path.join(ROOT, "public");
 const ADMIN_DIR = path.join(ROOT, "admin");
 const PORT = process.env.PORT || 4000;
 
+// The generated pages link to each other with config.basePath baked in
+// (e.g. "/blog" for a GitHub Pages project site). Strip it here so the
+// same public/ output previews correctly at both http://localhost:PORT/
+// and http://localhost:PORT/<basePath>/.
+function currentBasePath() {
+  try {
+    const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+    return (config.basePath || "").replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+}
+
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -128,7 +141,12 @@ http.createServer((req, res) => {
     return serveStaticFile(path.join(ADMIN_DIR, "index.html"), res);
   }
 
-  let urlPath = reqPath.endsWith("/") ? reqPath + "index.html" : reqPath;
+  const basePath = currentBasePath();
+  const sitePath = basePath && (reqPath === basePath || reqPath.startsWith(basePath + "/"))
+    ? reqPath.slice(basePath.length) || "/"
+    : reqPath;
+
+  let urlPath = sitePath.endsWith("/") ? sitePath + "index.html" : sitePath;
   let filePath = path.join(PUBLIC_DIR, urlPath);
 
   if (!filePath.startsWith(PUBLIC_DIR)) {

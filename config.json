@@ -3,6 +3,7 @@
   "tagline": "A newsletter, kept in the margins.",
   "description": "Short, occasional essays on ideas worth sitting with.",
   "url": "https://scrutiniz3r.github.io/blog",
+  "basePath": "/blog",
   "author": "Abbiraam",
   "linkedin": "https://www.linkedin.com/in/abbiraam/",
   "accent": "#CFFF04",
