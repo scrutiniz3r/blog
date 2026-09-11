@@ -129,6 +129,7 @@ img, svg { max-width: 100%; display: block; }
   font-weight: 500;
   margin: 1.4rem 0 0;
   max-width: 34ch;
+  white-space: pre-line;
 }
 
 .hero-graphic {
