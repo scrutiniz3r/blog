@@ -255,16 +255,9 @@ img, svg { max-width: 100%; display: block; }
   margin: 0;
 }
 
-.archive-list li:nth-child(3n+2) .post-row-title,
-.archive-list li:nth-child(3n+2) .post-row-excerpt {
-  grid-column: 5 / 13;
-}
-
 @media (max-width: 720px) {
   .post-row { grid-template-columns: 1fr; gap: 0.3rem; }
-  .post-row-date, .post-row-title, .post-row-excerpt,
-  .archive-list li:nth-child(3n+2) .post-row-title,
-  .archive-list li:nth-child(3n+2) .post-row-excerpt {
+  .post-row-date, .post-row-title, .post-row-excerpt {
     grid-column: 1 / -1;
   }
 }
