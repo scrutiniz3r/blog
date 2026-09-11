@@ -238,6 +238,7 @@ function build() {
 </nav>
 </header>
 ${bodyHtml}
+${subscribeForm()}
 <footer class="site-footer">
 <span>&copy; ${new Date().getFullYear()} ${escapeHtml(config.author)}</span>
 <span class="site-footer-links">
@@ -252,6 +253,49 @@ ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
 
   function heroSvg() {
     return fs.readFileSync(path.join(SRC_DIR, "hero.svg"), "utf8");
+  }
+
+  // Buttondown's standard embeddable form. Renders nothing if no username
+  // is configured, so the site is unaffected until you've set one up.
+  function subscribeForm() {
+    if (!config.buttondownUsername) return "";
+    const user = config.buttondownUsername;
+    return `
+<section class="subscribe wrap">
+<form action="https://buttondown.com/api/emails/embed-subscribe/${user}" method="post" target="popupwindow" onsubmit="window.open('https://buttondown.com/${user}', 'popupwindow')" class="subscribe-form">
+<label for="bd-email">Get new posts by email</label>
+<div class="subscribe-row">
+<input type="email" name="email" id="bd-email" placeholder="you@example.com" required>
+<input type="hidden" value="1" name="embed">
+<button type="submit">Subscribe</button>
+</div>
+</form>
+</section>`;
+  }
+
+  // The comment widget is entirely client-side (comments.js), so it just
+  // needs a mount point + a form; renders nothing if commentsApi isn't set.
+  function commentsSection(slug) {
+    if (!config.commentsApi) return "";
+    return `
+<section id="comments" class="comments">
+<h2>Comments</h2>
+<div class="comment-list"></div>
+<form class="comment-form">
+<div class="comment-form-row">
+<input type="text" name="name" placeholder="Name" required maxlength="80">
+</div>
+<textarea name="text" placeholder="Say something…" required maxlength="2000" rows="4"></textarea>
+<div style="position:absolute;left:-9999px" aria-hidden="true">
+<label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+</div>
+<div class="comment-form-actions">
+<button type="submit">Post comment</button>
+<span class="comment-status"></span>
+</div>
+</form>
+</section>
+<script src="${withBase("/comments.js")}" data-api="${config.commentsApi}" data-post="${slug}" defer></script>`;
   }
 
   function categoryNav(activeSlug) {
@@ -320,6 +364,7 @@ ${categoryNav(cat.slug)}
 <div class="post-body">
 ${p.bodyHtml}
 <div class="post-footer"><a href="${withBase("/")}">&larr; Back to archive</a></div>
+${commentsSection(p.slug)}
 </div>
 </div>
 </article>`;
@@ -360,6 +405,7 @@ ${items}
   fs.writeFileSync(path.join(PUBLIC_DIR, "index.html"), renderIndex());
   fs.writeFileSync(path.join(PUBLIC_DIR, "rss.xml"), renderRss());
   fs.copyFileSync(path.join(SRC_DIR, "styles.css"), path.join(PUBLIC_DIR, "styles.css"));
+  fs.copyFileSync(path.join(SRC_DIR, "comments.js"), path.join(PUBLIC_DIR, "comments.js"));
 
   if (fs.existsSync(IMAGES_DIR)) {
     fs.cpSync(IMAGES_DIR, path.join(PUBLIC_DIR, "images"), { recursive: true });

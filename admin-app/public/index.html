@@ -97,6 +97,13 @@
   .delete-link:hover { color: #c0392b; text-decoration-color: #c0392b; }
   .row-flash { font-size: 0.8rem; color: var(--muted); margin-left: 0.5rem; }
 
+  .comment-card { border: 1px solid var(--line); border-radius: 4px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; background: #fff; }
+  .comment-card .meta { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.3rem; }
+  .comment-card .who { font-weight: 700; font-size: 0.9rem; }
+  .comment-card .on { font-size: 0.75rem; color: var(--muted); }
+  .comment-card .when { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .comment-card .text { font-size: 0.92rem; white-space: pre-wrap; }
+
   @media (max-width: 480px) {
     table, thead, tbody, tr { display: block; }
     thead { display: none; }
@@ -174,6 +181,13 @@
 </table>
 </section>
 
+<section id="comments-section">
+<h2>Comments</h2>
+<p class="hint">Everything left on any post, newest first. Delete removes it for good.</p>
+<div id="comment-rows"></div>
+<p class="hint" id="comments-empty" hidden>No comments yet.</p>
+</section>
+
 <section id="categories-section">
 <h2>Categories</h2>
 <p class="hint">These drive the filter tabs on the homepage and the tag on every post.</p>
@@ -217,6 +231,51 @@ async function loadData() {
   renderCategories();
   renderPosts();
   renderCategoryOptions();
+  loadComments();
+}
+
+// ---------- Comments moderation ----------
+
+async function loadComments() {
+  try {
+    const res = await fetch("/api/comments-admin");
+    const { comments } = await res.json();
+    renderComments(comments || []);
+  } catch {
+    // leave the section as-is; not critical to the rest of the page
+  }
+}
+
+function renderComments(comments) {
+  const wrap = document.getElementById("comment-rows");
+  wrap.innerHTML = "";
+  document.getElementById("comments-empty").hidden = comments.length > 0;
+
+  comments.forEach((c) => {
+    const deleteBtn = el("button", { type: "button", class: "delete-link", text: "Delete" });
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm(`Delete this comment from ${c.name}?`)) return;
+      const res = await fetch("/api/comments-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: c.post, id: c.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        renderComments(data.comments || []);
+      }
+    });
+
+    const card = el("div", { class: "comment-card" }, [
+      el("div", { class: "meta" }, [
+        el("span", { class: "who", text: c.name }),
+        deleteBtn,
+      ]),
+      el("div", { class: "when", text: `on "${c.post}" · ${new Date(c.date).toLocaleString()}` }),
+      el("div", { class: "text", text: c.text }),
+    ]);
+    wrap.appendChild(card);
+  });
 }
 
 // ---------- Write / edit form ----------

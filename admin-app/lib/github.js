@@ -32,7 +32,9 @@ async function ghFetch(path, opts = {}) {
   if (res.status === 404) return { notFound: true };
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`GitHub API ${res.status} on ${path}: ${body.slice(0, 300)}`);
+    const err = new Error(`GitHub API ${res.status} on ${path}: ${body.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
   }
   if (res.status === 204) return { data: null };
   return { data: await res.json() };
@@ -71,4 +73,23 @@ async function deleteFile(filePath, message, sha) {
   });
 }
 
-module.exports = { getFile, listDir, putFile, deleteFile };
+// Read-modify-write with retry: `mutate(currentValueOrNull)` returns the new
+// value to save (or null/undefined to skip writing). Retries a few times on
+// a 409 (someone else's commit landed between our read and write) — the
+// realistic case here being two comments posted within moments of each
+// other on the same post's comment file.
+async function updateFile(filePath, message, mutate, { attempts = 4 } = {}) {
+  for (let i = 0; i < attempts; i++) {
+    const existing = await getFile(filePath);
+    const next = await mutate(existing ? existing.content : null);
+    if (next === null || next === undefined) return null;
+    try {
+      return await putFile(filePath, next, message, existing ? existing.sha : undefined);
+    } catch (e) {
+      if (e.status === 409 && i < attempts - 1) continue;
+      throw e;
+    }
+  }
+}
+
+module.exports = { getFile, listDir, putFile, deleteFile, updateFile };

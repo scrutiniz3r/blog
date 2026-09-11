@@ -49,6 +49,24 @@ and post and saves straight back to `config.json` / the post files, then
 rebuilds. `/admin` has no login; it's a local-only tool, not something to
 expose on a public deployment (see Deploying below).
 
+## Comments
+
+Off by default. Every post page can show a comment box (name + text, no
+account needed) backed by a small public API — see "Turn on comments" in
+[`admin-app/README.md`](admin-app/README.md). Once that's deployed, set
+`commentsApi` in `config.json` to its URL; leave it `""` to keep comments
+off. Moderation (deleting) happens from the admin app's "Comments" section.
+
+## Email sign-up
+
+Off by default. Set `buttondownUsername` in `config.json` to your
+[Buttondown](https://buttondown.com) username and every page gets a
+"Get new posts by email" form in the footer, using Buttondown's own
+embeddable-form endpoint — no backend of ours involved. Buttondown can also
+auto-email subscribers straight from `rss.xml` (configure that in
+Buttondown's own dashboard under Settings → Import). Leave the field `""`
+to keep the form off.
+
 ## Configuring
 
 Edit `config.json` — title, tagline, description, site URL, author, and the

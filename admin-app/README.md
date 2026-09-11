@@ -40,6 +40,22 @@ Vercel deploys automatically once the project is created. Open the URL it gives 
 
 Bookmark that URL (or add it to your phone's home screen) — that's what you'll open from your phone going forward.
 
+**5. Turn on comments (optional).**
+This same deployment also serves the blog's comment box — `/api/comments`
+(public, no login) is what post pages call to read and post comments;
+`/api/comments-admin` (password-protected, listed in the "Comments"
+section on this page) is how you moderate/delete them.
+
+Once step 4 is done, take the URL Vercel gave you and set it in
+`config.json` at the repo root:
+
+```json
+"commentsApi": "https://your-project-name.vercel.app"
+```
+
+Commit and push that change — comments then show up on every post page.
+Leave it as `""` to keep comments off.
+
 ## Notes
 
 - Every save is a commit + a live GitHub Actions run (usually live in under a minute). The posts table doesn't show a "still building" state — if you publish and don't see it live yet, that's normal, give it a minute.

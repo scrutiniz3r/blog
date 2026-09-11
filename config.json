@@ -8,6 +8,8 @@
   "linkedin": "https://www.linkedin.com/in/abbiraam/",
   "accent": "#CFFF04",
   "language": "en-us",
+  "commentsApi": "",
+  "buttondownUsername": "",
   "categories": [
     {
       "slug": "movies",
