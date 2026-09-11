@@ -265,10 +265,8 @@ ${config.linkedin ? `<a href="${config.linkedin}">LinkedIn</a>` : ""}
 <li>
 <a class="post-row" href="${withBase(`/posts/${p.slug}/`)}">
 <span class="post-row-date">${fmtDate(p.date)}${p.categoryLabel ? ` <span class="post-row-cat">${escapeHtml(p.categoryLabel)}</span>` : ""}</span>
-<span>
 <h2 class="post-row-title">${escapeHtml(p.title)}</h2>
 <p class="post-row-excerpt">${escapeHtml(p.excerpt)}</p>
-</span>
 </a>
 </li>`).join("");
   }

@@ -233,7 +233,7 @@ img, svg { max-width: 100%; display: block; }
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--ink);
+  color: #0a0a0a;
   background: var(--accent);
   padding: 0.12rem 0.4rem;
 }
