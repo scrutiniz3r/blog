@@ -3,6 +3,7 @@ title: How I feel about Term Insurance. Not the term "Insurance".
 date: 2026-09-12
 slug: how-i-feel-about-term-insurance-not-the-term-insurance
 excerpt: Term Insurance
+category: wealth
 ---
 
 What are the advantages of having your parent work in LIC?
