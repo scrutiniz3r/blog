@@ -222,7 +222,7 @@ function build() {
 <meta name="description" content="${escapeHtml(description || config.description)}">
 <link rel="canonical" href="${config.url}${canonicalPath}">
 <link rel="alternate" type="application/rss+xml" title="${escapeHtml(config.title)}" href="${config.url}/rss.xml">
-<link rel="icon" href="data:,">
+<link rel="icon" type="image/svg+xml" href="${withBase("/favicon.svg")}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
@@ -406,6 +406,7 @@ ${items}
   fs.writeFileSync(path.join(PUBLIC_DIR, "rss.xml"), renderRss());
   fs.copyFileSync(path.join(SRC_DIR, "styles.css"), path.join(PUBLIC_DIR, "styles.css"));
   fs.copyFileSync(path.join(SRC_DIR, "comments.js"), path.join(PUBLIC_DIR, "comments.js"));
+  fs.copyFileSync(path.join(SRC_DIR, "favicon.svg"), path.join(PUBLIC_DIR, "favicon.svg"));
 
   if (fs.existsSync(IMAGES_DIR)) {
     fs.cpSync(IMAGES_DIR, path.join(PUBLIC_DIR, "images"), { recursive: true });
