@@ -3,6 +3,7 @@ title: Using Iphone 12 mini in the big 2026.
 date: 2026-09-23
 slug: using-iphone-12-mini-in-the-big-2026
 excerpt: Using Iphone 12 mini in the big 2026.
+category: tech
 ---
 
 Like mkbhd would say “I have been using the iphone for more than one month now”,
