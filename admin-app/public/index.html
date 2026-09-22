@@ -5,15 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin — Field Notes</title>
 <style>
+  /* Always dark — this is a personal tool, not something that needs to
+     also suit a light-mode visitor, so it doesn't follow system
+     preference; it just always looks like this. */
   :root {
-    --ink: #0a0a0a; --paper: #fbfbf8; --line: #ddddd6; --muted: #6b6b64; --accent: #CFFF04;
-    --surface: #fff; --ok: #2f7a3d; --err: #c0392b; --err-soft: #fdf1ef;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --ink: #f2f2ee; --paper: #121210; --line: rgba(242, 242, 238, 0.16); --muted: #a7a79c;
-      --surface: #1c1c18; --ok: #5fbf76; --err: #ff6b5b; --err-soft: rgba(255, 107, 91, 0.12);
-    }
+    color-scheme: dark;
+    --ink: #f2f2ee; --paper: #121210; --line: rgba(242, 242, 238, 0.16); --muted: #a7a79c; --accent: #CFFF04;
+    --surface: #1c1c18; --ok: #5fbf76; --err: #ff6b5b; --err-soft: rgba(255, 107, 91, 0.12);
   }
   * { box-sizing: border-box; }
   body {
